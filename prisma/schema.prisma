@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum HubRole {
+  ADMIN
+  USER
+}
+
+enum SystemStatus {
+  ONLINE
+  MAINTENANCE
+  OFFLINE
+}
+
+enum ExternalLinkStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum AuditAction {
+  LOGIN
+  LOGIN_FAILED
+  LOGOUT
+  USER_CREATED
+  USER_UPDATED
+  USER_DISABLED
+  ACCESS_GRANTED
+  ACCESS_REVOKED
+  ACCESS_UPDATED
+  USER_SYSTEM_ACCESS_CREATED
+  USER_SYSTEM_ACCESS_UPDATED
+  USER_SYSTEM_ACCESS_REVOKED
+  SYSTEM_CREATED
+  SYSTEM_UPDATED
+  SYSTEM_ACCESSED
+  PASSWORD_CHANGED
+}
+
+model User {
+  id             String     @id @default(cuid())
+  name           String
+  email          String     @unique
+  passwordHash   String     @map("password_hash")
+  jobTitle       String?    @map("cargo")
+  department     String?    @map("departamento")
+  avatarUrl      String?    @map("avatar_url")
+  status         UserStatus @default(ACTIVE)
+  hubRole        HubRole    @default(USER) @map("hub_role")
+  sessionVersion Int        @default(0) @map("session_version")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  accesses       UserSystemAccess[] @relation("SystemAccessOwner")
+  linkedAccesses UserSystemAccess[] @relation("SystemAccessLinkedBy")
+  auditLogs      AuditLog[]
+
+  @@index([status, department])
+  @@map("users")
+}
+
+model System {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  description String
+  url         String?
+  icon        String       @default("grid")
+  status      SystemStatus @default(OFFLINE)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  accesses    UserSystemAccess[]
+
+  @@map("systems")
+}
+
+model UserSystemAccess {
+  id                  String             @id @default(cuid())
+  userId              String             @map("user_id")
+  systemId            String             @map("system_id")
+  enabled             Boolean            @default(false)
+  role                String             @default("USER")
+  externalUserId      String?            @map("external_user_id")
+  externalUserEmail   String?            @map("external_user_email")
+  externalDisplayName String?            @map("external_display_name")
+  externalProvider    String?            @map("external_provider")
+  externalIssuer      String?            @map("external_issuer")
+  externalSubject     String?            @map("external_subject")
+  status              ExternalLinkStatus @default(ACTIVE)
+  linkedBy            String?            @map("linked_by")
+  linkedAt            DateTime?          @map("linked_at")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+  user                User               @relation("SystemAccessOwner", fields: [userId], references: [id], onDelete: Restrict)
+  system              System             @relation(fields: [systemId], references: [id], onDelete: Restrict)
+  linkedByUser        User?              @relation("SystemAccessLinkedBy", fields: [linkedBy], references: [id], onDelete: Restrict)
+
+  @@unique([userId, systemId])
+  @@index([systemId, enabled])
+  @@index([externalProvider, externalIssuer, externalSubject])
+  @@index([linkedBy])
+  @@map("user_system_access")
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?     @map("user_id")
+  action    AuditAction
+  target    String?
+  metadata  Json?
+  ipAddress String?     @map("ip_address")
+  createdAt DateTime    @default(now()) @map("created_at")
+  user      User?       @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
+
+model LoginAttempt {
+  key       String   @id
+  count     Int      @default(1)
+  expiresAt DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("login_attempts")
+}

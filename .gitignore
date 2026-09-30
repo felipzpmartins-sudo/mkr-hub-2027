@@ -1,0 +1,26 @@
+﻿# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local / temporary files
+purchase-hub-8d0d9110/
+central-compras-schema-diagnostico.sql
+
+# Local generated files
+.local/
+test-results/
+tsconfig.tsbuildinfo

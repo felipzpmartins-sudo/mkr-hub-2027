@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Approvers can view all approvers" ON public.approvers;

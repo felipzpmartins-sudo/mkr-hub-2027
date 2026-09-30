@@ -1,0 +1,1 @@
+CREATE POLICY "Veto approvers can view all solicitations" ON public.solicitations FOR SELECT USING (public.is_veto_approver(auth.uid()));

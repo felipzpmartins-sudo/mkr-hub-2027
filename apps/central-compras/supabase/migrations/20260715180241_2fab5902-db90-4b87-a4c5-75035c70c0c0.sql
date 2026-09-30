@@ -1,0 +1,2 @@
+UPDATE public.solicitations SET stock_status = 'pending_pickup' WHERE id = '08003723-141e-44d5-a18a-cc8a8a1a9b27';
+DELETE FROM public.stock_activity_log WHERE solicitation_id = '08003723-141e-44d5-a18a-cc8a8a1a9b27' AND action = 'separation_started';

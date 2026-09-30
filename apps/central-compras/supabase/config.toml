@@ -1,0 +1,18 @@
+# Intentionally unlinked: set only a dedicated test project with `supabase link`.
+# Never point this copy at the Lovable/production project.
+project_id = "REPLACE_WITH_TEST_PROJECT_ID"
+
+[functions.process-email-queue]
+verify_jwt = true
+
+[functions.send-transactional-email]
+verify_jwt = true
+
+[functions.preview-transactional-email]
+verify_jwt = false
+
+[functions.handle-email-unsubscribe]
+verify_jwt = false
+
+[functions.handle-email-suppression]
+verify_jwt = false

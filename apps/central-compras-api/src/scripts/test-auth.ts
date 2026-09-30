@@ -7,6 +7,11 @@ async function run(): Promise<void> {
   assert.equal(health.status, 200);
   assert.deepEqual(await health.json(), { ok: true, service: "central-compras-api" });
 
+  const protectedWithoutSession = await fetch(`${baseUrl}/debug/protected`);
+  assert.equal(protectedWithoutSession.status, 401);
+  const unauthenticatedBody = (await protectedWithoutSession.json()) as { error?: { code?: string } };
+  assert.equal(unauthenticatedBody.error?.code, "UNAUTHORIZED");
+
   const login = await fetch(`${baseUrl}/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -32,6 +37,35 @@ async function run(): Promise<void> {
   });
   assert.equal(me.status, 200);
 
+  const protectedWithSession = await fetch(`${baseUrl}/debug/protected`, {
+    headers: { cookie: sessionCookie },
+  });
+  assert.equal(protectedWithSession.status, 200);
+
+  const admin = await fetch(`${baseUrl}/debug/admin`, {
+    headers: { cookie: sessionCookie },
+  });
+  assert.equal(admin.status, 200);
+
+  const approver = await fetch(`${baseUrl}/debug/approver`, {
+    headers: { cookie: sessionCookie },
+  });
+  assert.equal(approver.status, 403);
+  const approverBody = (await approver.json()) as { error?: { code?: string } };
+  assert.equal(approverBody.error?.code, "FORBIDDEN");
+
+  const profile = await fetch(`${baseUrl}/profile/me`, {
+    headers: { cookie: sessionCookie },
+  });
+  assert.equal(profile.status, 200);
+  const profileBody = (await profile.json()) as {
+    user?: { id?: string; email?: string; profile?: object | null; roles?: string[] };
+  };
+  assert.equal(profileBody.user?.id, "1aa040f0-3275-4a28-9aff-35a7fb811590");
+  assert.equal(profileBody.user?.email, "teste.central@local.test");
+  assert.ok(profileBody.user?.profile);
+  assert.deepEqual(profileBody.user?.roles, ["admin"]);
+
   const logout = await fetch(`${baseUrl}/auth/logout`, {
     method: "POST",
     headers: { cookie: sessionCookie },
@@ -39,12 +73,12 @@ async function run(): Promise<void> {
   assert.equal(logout.status, 204);
   assert.ok(logout.headers.getSetCookie().at(0)?.includes("Max-Age=0"));
 
-  const meAfterLogout = await fetch(`${baseUrl}/auth/me`, {
+  const meAfterLogout = await fetch(`${baseUrl}/debug/protected`, {
     headers: { cookie: sessionCookie },
   });
   assert.equal(meAfterLogout.status, 401);
 
-  console.info("Local auth flow passed: health, login, me, logout, revoked session.");
+  console.info("Local auth/authorization flow passed: session, role guards, profile and revoked session.");
 }
 
 run().catch((error: unknown) => {

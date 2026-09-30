@@ -2,6 +2,9 @@ import bcrypt from "bcryptjs";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { env } from "../config/env.js";
+import { toPublicAuthUser } from "../lib/auth-context.js";
+import { sendError } from "../lib/errors.js";
+import { requireAuth } from "../lib/guards.js";
 import { getPrisma } from "../lib/prisma.js";
 import {
   clearSessionCookie,
@@ -16,13 +19,11 @@ const loginBodySchema = z.object({
   password: z.string().min(1).max(256),
 });
 
-const invalidCredentials = { error: "Invalid email or password." };
-const unauthorized = { error: "Authentication required." };
-
-function toPublicUser(user: {
+function toLoginResponseUser(user: {
   id: string;
   email: string;
   fullName: string | null;
+  phone: string | null;
   status: string;
   profile: { fullName: string | null; phone: string | null; department: string | null } | null;
   roles: { role: string }[];
@@ -31,6 +32,7 @@ function toPublicUser(user: {
     id: user.id,
     email: user.email,
     fullName: user.fullName,
+    phone: user.phone,
     status: user.status,
     roles: user.roles.map(({ role }) => role),
     profile: user.profile
@@ -43,32 +45,12 @@ function toPublicUser(user: {
   };
 }
 
-async function findAuthenticatedUser(token: string) {
-  const session = await getPrisma().authSession.findUnique({
-    where: { tokenHash: hashSessionToken(token) },
-    include: {
-      user: {
-        include: {
-          profile: true,
-          roles: { select: { role: true } },
-        },
-      },
-    },
-  });
-
-  if (!session || session.revokedAt || session.expiresAt <= new Date() || session.user.status !== "ACTIVE") {
-    return undefined;
-  }
-
-  return { session, user: session.user };
-}
-
 export const authRoutes: FastifyPluginAsync = async (app) => {
   app.post("/login", async (request, reply) => {
     const input = loginBodySchema.safeParse(request.body);
 
     if (!input.success) {
-      return reply.code(400).send({ error: "Invalid login payload." });
+      return sendError(reply, 400, "VALIDATION_ERROR", "Invalid login payload.");
     }
 
     const user = await getPrisma().user.findUnique({
@@ -84,7 +66,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       : false;
 
     if (!user || !passwordMatches || user.status !== "ACTIVE") {
-      return reply.code(401).send(invalidCredentials);
+      return sendError(reply, 401, "UNAUTHORIZED", "Invalid email or password.");
     }
 
     const token = createSessionToken();
@@ -107,24 +89,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     ]);
 
     setSessionCookie(reply, token);
-    return reply.send({ user: toPublicUser(user) });
+    return reply.send({ user: toLoginResponseUser(user) });
   });
 
-  app.get("/me", async (request, reply) => {
-    const token = readSessionToken(request);
-
-    if (!token) {
-      return reply.code(401).send(unauthorized);
-    }
-
-    const authenticated = await findAuthenticatedUser(token);
-
-    if (!authenticated) {
-      clearSessionCookie(reply);
-      return reply.code(401).send(unauthorized);
-    }
-
-    return reply.send({ user: toPublicUser(authenticated.user) });
+  app.get("/me", { preHandler: requireAuth }, async (request, reply) => {
+    return reply.send({ user: toPublicAuthUser(request.auth!) });
   });
 
   app.post("/logout", async (request, reply) => {

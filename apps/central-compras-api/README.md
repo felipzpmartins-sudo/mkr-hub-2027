@@ -88,6 +88,34 @@ A senha de laboratório é definida exclusivamente no script de seed e não deve
 
 Esses endpoints são laboratório: não estão ligados ao frontend, não implementam SSO e não devem ser publicados ou apontados para ambientes reais.
 
+## Autorização de laboratório
+
+Em toda requisição com cookie de sessão válido, o gancho da API anexa apenas dados públicos em `request.auth`:
+
+```ts
+request.auth = {
+  user: { id, email, fullName, phone, status },
+  profile: { fullName, phone, department } | null,
+  roles: ["admin"],
+  session: { id, expiresAt },
+};
+```
+
+Não há `passwordHash` nem token puro nesse contexto. Uma sessão ausente, expirada, revogada ou de usuário inativo não cria `request.auth`.
+
+As guardas reutilizáveis disponíveis são `requireAuth`, `requireRole`, `requireAnyRole`, `requireAdmin`, `requireApprover` e `requireStock`. Elas só verificam autenticação e papéis neste momento; regras de negócio continuam fora de escopo.
+
+Papéis inicialmente reconhecidos pelo contrato: `admin`, `requisition_approver`, `stock` e `user`. O seed local recebe apenas `admin`, portanto ele deve receber `403 Forbidden` na rota de aprovador.
+
+Rotas laboratoriais protegidas:
+
+- `GET /debug/protected` — exige sessão;
+- `GET /debug/admin` — exige `admin`;
+- `GET /debug/approver` — exige `requisition_approver`;
+- `GET /profile/me` — exige sessão e retorna usuário, perfil e papéis, sem dados sigilosos.
+
+Os erros seguem o formato `{ "error": { "code", "message" } }`, com códigos para `UNAUTHORIZED`, `FORBIDDEN`, `VALIDATION_ERROR`, `NOT_FOUND` e `INTERNAL_ERROR`.
+
 ## Scripts
 
 - `npm run dev` — inicia a API local com recarga.

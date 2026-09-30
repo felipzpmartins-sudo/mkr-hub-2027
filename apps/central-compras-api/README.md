@@ -116,6 +116,53 @@ Rotas laboratoriais protegidas:
 
 Os erros seguem o formato `{ "error": { "code", "message" } }`, com códigos para `UNAUTHORIZED`, `FORBIDDEN`, `VALIDATION_ERROR`, `NOT_FOUND` e `INTERNAL_ERROR`.
 
+## Solicitações — primeiro módulo de negócio
+
+O módulo inicial preserva o formato mínimo já confirmado no legado: `id`, `userId`, dados do solicitante, `requestType`, `generalDescription`, `status`, `approvalStatus`, `stockStatus`, `createdAt` e `updatedAt`. Cada criação gera uma entrada inicial em `StatusHistory` na mesma transação.
+
+Rotas disponíveis:
+
+- `GET /solicitations?status=pending&search=material&page=1&limit=20`
+- `GET /solicitations/:id`
+- `POST /solicitations`
+
+Exemplo de criação:
+
+```json
+{
+  "requestType": "product",
+  "generalDescription": "Material de escritório para o laboratório"
+}
+```
+
+O corpo é estrito: `userId`, status e dados de solicitante não são aceitos. A API sempre define `userId` pelo `request.auth.user.id`, e deriva os dados do solicitante da sessão autenticada. Isso impede criar uma solicitação em nome de outro usuário.
+
+Permissões aplicadas a partir das políticas legadas confirmadas:
+
+- `admin` lista e consulta todas;
+- dono lista e consulta as próprias;
+- `requisition_approver` lista e consulta apenas `internal_requisition`;
+- `stock` lista e consulta apenas `internal_requisition` já liberada (`approved_released`, `approved_partial` ou `delivered`).
+
+Exemplo de listagem:
+
+```json
+{
+  "items": [
+    {
+      "id": "…",
+      "userId": "…",
+      "requestType": "product",
+      "status": "pending",
+      "generalDescription": "Material de escritório para o laboratório"
+    }
+  ],
+  "pagination": { "page": 1, "limit": 20, "total": 1, "totalPages": 1 }
+}
+```
+
+Este ainda é um recorte laboratorial. Anexos, edição e transições de status, fluxo completo de aprovação, e-mail, WhatsApp, cotações, prioridade, valor e datas específicas continuam pendentes. O legado possui campos por tipo de solicitação; eles serão incluídos somente após revisão e plano de importação aprovados.
+
 ## Scripts
 
 - `npm run dev` — inicia a API local com recarga.

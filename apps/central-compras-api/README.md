@@ -163,6 +163,28 @@ Exemplo de listagem:
 
 Este ainda é um recorte laboratorial. Anexos, edição e transições de status, fluxo completo de aprovação, e-mail, WhatsApp, cotações, prioridade, valor e datas específicas continuam pendentes. O legado possui campos por tipo de solicitação; eles serão incluídos somente após revisão e plano de importação aprovados.
 
+## Status, aprovação e estoque de laboratório
+
+As alterações usam transações: a solicitação é atualizada e uma linha de `StatusHistory` é criada juntas. O histórico usa o status principal sem prefixo e registra os outros fluxos como `approval:<valor>` ou `stock:<valor>`, porque o contrato atual ainda não possui uma tabela de eventos tipados.
+
+Rotas protegidas:
+
+- `PATCH /solicitations/:id/status` — somente `admin`; aceita `pending`, `approved`, `rejected`, `purchasing` ou `delivered`.
+- `PATCH /solicitations/:id/approval` — `admin` ou `requisition_approver`, somente para `internal_requisition`; aceita `approved` ou `rejected`.
+- `PATCH /solicitations/:id/stock` — `stock` ou `admin`, somente em requisição interna já liberada; aceita `pending_pickup`, `separating`, `ready_pickup`, `picked_up` ou `returned`.
+
+Exemplos:
+
+```json
+{ "decision": "approved", "comment": "Aprovado para separação" }
+```
+
+```json
+{ "status": "separating", "comment": "Itens em separação" }
+```
+
+Uma aprovação interna válida cria ou atualiza o voto do ator, recalcula `approvedCount`, define `approvalStatus` como `approved_released` (ou `rejected`) e, quando liberada, inicia `stockStatus` como `pending_pickup`. Não há fluxo de cotações, múltiplas aprovações genéricas, cancelamento especializado, e-mail, WhatsApp ou anexos nesta etapa. Esses comportamentos do legado permanecem pendentes de migração explícita.
+
 ## Scripts
 
 - `npm run dev` — inicia a API local com recarga.

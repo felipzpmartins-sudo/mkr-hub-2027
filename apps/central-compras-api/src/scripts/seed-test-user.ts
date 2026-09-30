@@ -6,6 +6,7 @@ const localUsers = [
   { id: "1aa040f0-3275-4a28-9aff-35a7fb811590", email: "teste.central@local.test", fullName: "Usuário Teste Central", phone: "11999990001", roles: ["admin"] },
   { id: "2bb040f0-3275-4a28-9aff-35a7fb811590", email: "solicitante.central@local.test", fullName: "Solicitante Local", phone: "11999990002", roles: ["user"] },
   { id: "3cc040f0-3275-4a28-9aff-35a7fb811590", email: "aprovador.central@local.test", fullName: "Aprovador Local", phone: "11999990003", roles: ["requisition_approver"] },
+  { id: "4dd040f0-3275-4a28-9aff-35a7fb811590", email: "estoque.central@local.test", fullName: "Estoque Local", phone: "11999990004", roles: ["stock"] },
 ] as const;
 
 const sampleSolicitations = [
@@ -35,11 +36,15 @@ async function seed(): Promise<void> {
   }
 
   for (const sample of sampleSolicitations) {
+    await prisma.approval.deleteMany({ where: { solicitationId: sample.id } });
+    await prisma.statusHistory.deleteMany({ where: { solicitationId: sample.id } });
     await prisma.solicitation.upsert({ where: { id: sample.id }, update: sample, create: sample });
-    await prisma.statusHistory.upsert({
+    await prisma.solicitation.update({
       where: { id: sample.id },
-      update: { newStatus: sample.status, justification: "Initial local laboratory solicitation." },
-      create: { id: sample.id, solicitationId: sample.id, changedBy: sample.userId, oldStatus: null, newStatus: sample.status, justification: "Initial local laboratory solicitation." },
+      data: { approvedCount: 0, releasedAt: null, stockStatus: null },
+    });
+    await prisma.statusHistory.create({
+      data: { solicitationId: sample.id, changedBy: sample.userId, oldStatus: null, newStatus: sample.status, justification: "Initial local laboratory solicitation." },
     });
   }
 

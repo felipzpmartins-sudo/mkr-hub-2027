@@ -65,6 +65,8 @@ function toSolicitationResponse(solicitation: {
   requestType: string;
   status: string;
   approvalStatus: string | null;
+  approvedCount: number;
+  releasedAt: Date | null;
   stockStatus: string | null;
   generalDescription: string | null;
   createdAt: Date;
@@ -79,6 +81,8 @@ function toSolicitationResponse(solicitation: {
     requestType: solicitation.requestType,
     status: solicitation.status,
     approvalStatus: solicitation.approvalStatus,
+    approvedCount: solicitation.approvedCount,
+    releasedAt: solicitation.releasedAt,
     stockStatus: solicitation.stockStatus,
     generalDescription: solicitation.generalDescription,
     createdAt: solicitation.createdAt,

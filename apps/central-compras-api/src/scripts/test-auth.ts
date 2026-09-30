@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 const baseUrl = process.env.API_URL ?? "http://127.0.0.1:4000";
 const adminId = "1aa040f0-3275-4a28-9aff-35a7fb811590";
 const regularUserId = "2bb040f0-3275-4a28-9aff-35a7fb811590";
+const internalRequisitionId = "22222222-2222-4222-8222-222222222222";
+const productSolicitationId = "33333333-3333-4333-8333-333333333333";
 const localPassword = "Teste@123456";
 type ErrorResponse = { error?: { code?: string } };
 type SolicitationList = { items: Array<{ id: string; userId: string; requestType: string }> };
@@ -26,10 +28,17 @@ async function run(): Promise<void> {
   const unauthenticated = await fetch(`${baseUrl}/solicitations`);
   assert.equal(unauthenticated.status, 401);
   assert.equal(((await unauthenticated.json()) as ErrorResponse).error?.code, "UNAUTHORIZED");
+  const unauthenticatedStatus = await fetch(`${baseUrl}/solicitations/${internalRequisitionId}/status`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ status: "approved" }),
+  });
+  assert.equal(unauthenticatedStatus.status, 401);
 
   const adminCookie = await login("teste.central@local.test");
   const regularCookie = await login("solicitante.central@local.test");
   const approverCookie = await login("aprovador.central@local.test");
+  const stockCookie = await login("estoque.central@local.test");
 
   const regularList = await fetch(`${baseUrl}/solicitations`, { headers: { cookie: regularCookie } });
   assert.equal(regularList.status, 200);
@@ -55,6 +64,65 @@ async function run(): Promise<void> {
   assert.equal(approverList.status, 200);
   const approverItems = (await approverList.json()) as SolicitationList;
   assert.ok(approverItems.items.every((item) => item.requestType === "internal_requisition"));
+
+  const regularApproval = await fetch(`${baseUrl}/solicitations/${internalRequisitionId}/approval`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", cookie: regularCookie },
+    body: JSON.stringify({ decision: "approved" }),
+  });
+  assert.equal(regularApproval.status, 403);
+
+  const wrongTypeApproval = await fetch(`${baseUrl}/solicitations/${productSolicitationId}/approval`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", cookie: approverCookie },
+    body: JSON.stringify({ decision: "approved" }),
+  });
+  assert.equal(wrongTypeApproval.status, 403);
+
+  const stockBeforeApproval = await fetch(`${baseUrl}/solicitations/${internalRequisitionId}/stock`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", cookie: stockCookie },
+    body: JSON.stringify({ status: "separating" }),
+  });
+  assert.equal(stockBeforeApproval.status, 403);
+
+  const approval = await fetch(`${baseUrl}/solicitations/${internalRequisitionId}/approval`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", cookie: approverCookie },
+    body: JSON.stringify({ decision: "approved", comment: "Aprovado no teste local." }),
+  });
+  assert.equal(approval.status, 200);
+  const approvalBody = (await approval.json()) as { solicitation?: { approvalStatus?: string; stockStatus?: string }; statusHistory?: { newStatus?: string } };
+  assert.equal(approvalBody.solicitation?.approvalStatus, "approved_released");
+  assert.equal(approvalBody.solicitation?.stockStatus, "pending_pickup");
+  assert.equal(approvalBody.statusHistory?.newStatus, "approval:approved_released");
+
+  const stockAfterApproval = await fetch(`${baseUrl}/solicitations/${internalRequisitionId}/stock`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", cookie: stockCookie },
+    body: JSON.stringify({ status: "separating", comment: "Separação iniciada no teste local." }),
+  });
+  assert.equal(stockAfterApproval.status, 200);
+  const stockBody = (await stockAfterApproval.json()) as { solicitation?: { stockStatus?: string }; statusHistory?: { newStatus?: string } };
+  assert.equal(stockBody.solicitation?.stockStatus, "separating");
+  assert.equal(stockBody.statusHistory?.newStatus, "stock:separating");
+
+  const adminStatus = await fetch(`${baseUrl}/solicitations/${productSolicitationId}/status`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", cookie: adminCookie },
+    body: JSON.stringify({ status: "delivered", comment: "Concluído no teste local." }),
+  });
+  assert.equal(adminStatus.status, 200);
+  const adminStatusBody = (await adminStatus.json()) as { solicitation?: { status?: string }; statusHistory?: { newStatus?: string } };
+  assert.equal(adminStatusBody.solicitation?.status, "delivered");
+  assert.equal(adminStatusBody.statusHistory?.newStatus, "delivered");
+
+  const invalidStatus = await fetch(`${baseUrl}/solicitations/${productSolicitationId}/status`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", cookie: adminCookie },
+    body: JSON.stringify({ status: "not_a_status" }),
+  });
+  assert.equal(invalidStatus.status, 400);
 
   const invalidPayload = await fetch(`${baseUrl}/solicitations`, { method: "POST", headers: { "content-type": "application/json", cookie: regularCookie }, body: JSON.stringify({ requestType: "", generalDescription: "" }) });
   assert.equal(invalidPayload.status, 400);

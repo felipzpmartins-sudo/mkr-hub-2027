@@ -8,6 +8,7 @@ const envSchema = z.object({
   SESSION_SECRET: z.string().default(""),
   COOKIE_DOMAIN: z.string().default(""),
   CORS_ORIGIN: z.string().default(""),
+  SESSION_TTL_HOURS: z.coerce.number().int().positive().max(24 * 31).default(24 * 7),
 });
 
 export const env = envSchema.parse(process.env);

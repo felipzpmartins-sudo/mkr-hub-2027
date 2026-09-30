@@ -42,24 +42,51 @@ Essas guardas não implementam SSO e não integram este laboratório ao login do
 
 ## Ambiente local
 
+Este laboratório só pode usar um PostgreSQL local e descartável. Não use URL de Railway, Lovable, Supabase, produção ou qualquer banco que contenha dados reais.
+
+Com PostgreSQL instalado localmente, crie um banco vazio e uma cópia local de ambiente:
+
 ```powershell
 Copy-Item .env.example .env
+# Edite apenas o .env local com DATABASE_URL apontando para o seu PostgreSQL descartável.
+# Exemplo: postgresql://central_compras_lab_owner@127.0.0.1:55432/central_compras_lab?schema=public
 npm install
+npm exec prisma migrate dev --name init_central_compras_auth_schema
+npm run seed:test-user
 npm run build
 npm run dev
 ```
 
-Com o servidor em execução, verifique localmente:
+`DATABASE_URL` no `.env` é ignorado pelo Git. `SESSION_SECRET` deve ser um valor exclusivo deste ambiente local; não reutilize nenhum segredo existente. O arquivo `.env.example` não contém credenciais.
+
+### Validação local
+
+Com o servidor em execução, valide o fluxo completo sem expor cookies ou tokens:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:4000/health
+npm run test:auth
 ```
 
-Resposta:
+O teste verifica `GET /health`, login, leitura da sessão, logout e a rejeição da sessão revogada. Ele usa somente o usuário local abaixo:
 
 ```json
-{ "ok": true, "service": "central-compras-api" }
+{
+  "id": "1aa040f0-3275-4a28-9aff-35a7fb811590",
+  "email": "teste.central@local.test",
+  "role": "admin"
+}
 ```
+
+A senha de laboratório é definida exclusivamente no script de seed e não deve ser usada fora deste banco descartável.
+
+## Autenticação local inicial
+
+- `POST /auth/login` valida e-mail e senha com bcrypt, cria um token aleatório e registra somente seu HMAC no banco.
+- O token puro fica somente no cookie `central_compras_session`, com `HttpOnly`, `SameSite=Lax`, expiração configurável e `Secure` quando `NODE_ENV=production`.
+- `GET /auth/me` encontra a sessão ativa e devolve apenas dados públicos do usuário, seus papéis e perfil básico. `passwordHash` nunca é retornado.
+- `POST /auth/logout` revoga a sessão atual e invalida o cookie.
+
+Esses endpoints são laboratório: não estão ligados ao frontend, não implementam SSO e não devem ser publicados ou apontados para ambientes reais.
 
 ## Scripts
 
@@ -68,12 +95,14 @@ Resposta:
 - `npm run start` — executa a versão compilada.
 - `npm run prisma:generate` — gera somente o client, sem conectar ao banco.
 - `npm exec prisma validate` — valida o contrato Prisma localmente, sem conectar ao banco.
-- `npm run prisma:migrate` — reservado para uma futura homologação; não execute contra banco real.
+- `npm run prisma:migrate` — aplica migration somente em um banco descartável explicitamente configurado no `.env` local.
 - `npm run prisma:studio` — reservado para ambiente de homologação.
+- `npm run seed:test-user` — cria ou atualiza somente o usuário de teste local.
+- `npm run test:auth` — executa a validação manual automatizada contra a API local já iniciada.
 
 ## Próximos passos
 
 1. Revisar o contrato completo contra o inventário e aprovar um plano de importação descartável.
 2. Definir política de senha inicial, cookies HttpOnly, expiração e revogação de sessão.
-3. Criar PostgreSQL de teste isolado, somente quando autorizado, e validar uma importação sem dados de produção.
-4. Implementar APIs, guardas e testes após aprovação explícita.
+3. Ampliar testes de autenticação e autorização antes de conectar qualquer frontend.
+4. Planejar uma importação descartável e sem dados de produção, somente após aprovação explícita.

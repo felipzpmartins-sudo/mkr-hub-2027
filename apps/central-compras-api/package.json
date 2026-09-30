@@ -10,6 +10,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "prisma generate && tsc -p tsconfig.json",
     "start": "node dist/server.js",
+    "seed:test-user": "tsx src/scripts/seed-test-user.ts",
+    "test:auth": "tsx src/scripts/test-auth.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"

@@ -9,6 +9,7 @@ const envSchema = z.object({
   COOKIE_DOMAIN: z.string().default(""),
   CORS_ORIGIN: z.string().default(""),
   SESSION_TTL_HOURS: z.coerce.number().int().positive().max(24 * 31).default(24 * 7),
+  MAX_UPLOAD_BYTES: z.coerce.number().int().positive().max(50 * 1024 * 1024).default(10 * 1024 * 1024),
 });
 
 export const env = envSchema.parse(process.env);

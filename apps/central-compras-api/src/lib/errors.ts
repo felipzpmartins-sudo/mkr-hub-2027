@@ -22,6 +22,10 @@ export function registerErrorHandlers(app: FastifyInstance): void {
   );
 
   app.setErrorHandler((error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
+    if (error.code === "FST_REQ_FILE_TOO_LARGE") {
+      return sendError(reply, 400, "VALIDATION_ERROR", "File exceeds the configured upload limit.");
+    }
+
     if (error.validation) {
       return sendError(reply, 400, "VALIDATION_ERROR", "Invalid request payload.");
     }

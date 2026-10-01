@@ -9,6 +9,12 @@ const localPassword = "Teste@123456";
 type ErrorResponse = { error?: { code?: string } };
 type SolicitationList = { items: Array<{ id: string; userId: string; requestType: string }> };
 
+function uploadBody(content: string | Uint8Array, type: string, name: string): FormData {
+  const form = new FormData();
+  form.set("file", new Blob([content], { type }), name);
+  return form;
+}
+
 async function login(email: string): Promise<string> {
   const response = await fetch(`${baseUrl}/auth/login`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, password: localPassword }) });
   assert.equal(response.status, 200);
@@ -34,11 +40,86 @@ async function run(): Promise<void> {
     body: JSON.stringify({ status: "approved" }),
   });
   assert.equal(unauthenticatedStatus.status, 401);
+  const unauthenticatedUpload = await fetch(`${baseUrl}/solicitations/${productSolicitationId}/attachments`, {
+    method: "POST",
+    body: uploadBody("laboratory attachment", "application/pdf", "unauthenticated.pdf"),
+  });
+  assert.equal(unauthenticatedUpload.status, 401);
 
   const adminCookie = await login("teste.central@local.test");
   const regularCookie = await login("solicitante.central@local.test");
   const approverCookie = await login("aprovador.central@local.test");
   const stockCookie = await login("estoque.central@local.test");
+
+  const ownUpload = await fetch(`${baseUrl}/solicitations/11111111-1111-4111-8111-111111111111/attachments`, {
+    method: "POST",
+    headers: { cookie: regularCookie },
+    body: uploadBody("regular owner attachment", "application/pdf", "comprovante local.pdf"),
+  });
+  assert.equal(ownUpload.status, 201);
+  const ownAttachment = (await ownUpload.json()) as { attachment?: { id?: string; originalName?: string; storagePath?: string } };
+  assert.ok(ownAttachment.attachment?.id);
+  assert.equal(ownAttachment.attachment?.originalName, "comprovante local.pdf");
+  assert.equal(ownAttachment.attachment?.storagePath, undefined);
+
+  const forbiddenUpload = await fetch(`${baseUrl}/solicitations/${productSolicitationId}/attachments`, {
+    method: "POST",
+    headers: { cookie: regularCookie },
+    body: uploadBody("forbidden", "application/pdf", "forbidden.pdf"),
+  });
+  assert.equal(forbiddenUpload.status, 403);
+
+  const adminUpload = await fetch(`${baseUrl}/solicitations/${productSolicitationId}/attachments`, {
+    method: "POST",
+    headers: { cookie: adminCookie },
+    body: uploadBody("admin attachment", "application/pdf", "admin.pdf"),
+  });
+  assert.equal(adminUpload.status, 201);
+  const adminAttachment = (await adminUpload.json()) as { attachment?: { id?: string } };
+  assert.ok(adminAttachment.attachment?.id);
+
+  const attachmentList = await fetch(`${baseUrl}/solicitations/11111111-1111-4111-8111-111111111111/attachments`, {
+    headers: { cookie: regularCookie },
+  });
+  assert.equal(attachmentList.status, 200);
+  const attachmentListBody = (await attachmentList.json()) as { items: Array<{ id: string; storagePath?: string }> };
+  assert.ok(attachmentListBody.items.some((item) => item.id === ownAttachment.attachment?.id));
+  assert.ok(attachmentListBody.items.every((item) => item.storagePath === undefined));
+
+  const ownDownload = await fetch(`${baseUrl}/attachments/${ownAttachment.attachment?.id}/download`, {
+    headers: { cookie: regularCookie },
+  });
+  assert.equal(ownDownload.status, 200);
+  assert.equal(await ownDownload.text(), "regular owner attachment");
+
+  const forbiddenDownload = await fetch(`${baseUrl}/attachments/${adminAttachment.attachment?.id}/download`, {
+    headers: { cookie: regularCookie },
+  });
+  assert.equal(forbiddenDownload.status, 403);
+
+  const invalidUpload = await fetch(`${baseUrl}/solicitations/11111111-1111-4111-8111-111111111111/attachments`, {
+    method: "POST",
+    headers: { cookie: regularCookie },
+    body: uploadBody("invalid file", "text/plain", "invalid.txt"),
+  });
+  assert.equal(invalidUpload.status, 400);
+
+  const largeUpload = await fetch(`${baseUrl}/solicitations/11111111-1111-4111-8111-111111111111/attachments`, {
+    method: "POST",
+    headers: { cookie: regularCookie },
+    body: uploadBody(new Uint8Array(10 * 1024 * 1024 + 1), "application/pdf", "large.pdf"),
+  });
+  assert.equal(largeUpload.status, 400);
+
+  const adminDelete = await fetch(`${baseUrl}/attachments/${ownAttachment.attachment?.id}`, {
+    method: "DELETE",
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(adminDelete.status, 204);
+  const deletedDownload = await fetch(`${baseUrl}/attachments/${ownAttachment.attachment?.id}/download`, {
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(deletedDownload.status, 404);
 
   const regularList = await fetch(`${baseUrl}/solicitations`, { headers: { cookie: regularCookie } });
   assert.equal(regularList.status, 200);

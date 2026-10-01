@@ -17,6 +17,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@fastify/multipart": "^10.1.2",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "bcryptjs": "^3.0.2",

@@ -1,60 +1,14 @@
-import type { Prisma } from "../generated/prisma/client.js";
 import type { FastifyPluginAsync } from "fastify";
+import type { Prisma } from "../generated/prisma/client.js";
 import { sendError } from "../lib/errors.js";
 import { requireAuth } from "../lib/guards.js";
 import { getPrisma } from "../lib/prisma.js";
+import { canReadSolicitation, solicitationAccessFilter } from "../lib/solicitation-access.js";
 import {
   createSolicitationSchema,
   solicitationIdSchema,
   solicitationListQuerySchema,
 } from "../schemas/solicitation.js";
-
-const releasedForStock = ["approved_released", "approved_partial", "delivered"];
-
-function canReadSolicitation(
-  auth: NonNullable<import("fastify").FastifyRequest["auth"]>,
-  solicitation: { userId: string; requestType: string; approvalStatus: string | null },
-): boolean {
-  if (auth.roles.includes("admin")) {
-    return true;
-  }
-
-  if (solicitation.userId === auth.user.id) {
-    return true;
-  }
-
-  if (auth.roles.includes("requisition_approver") && solicitation.requestType === "internal_requisition") {
-    return true;
-  }
-
-  return (
-    auth.roles.includes("stock") &&
-    solicitation.requestType === "internal_requisition" &&
-    solicitation.approvalStatus !== null &&
-    releasedForStock.includes(solicitation.approvalStatus)
-  );
-}
-
-function accessFilter(auth: NonNullable<import("fastify").FastifyRequest["auth"]>): Prisma.SolicitationWhereInput {
-  if (auth.roles.includes("admin")) {
-    return {};
-  }
-
-  const visibility: Prisma.SolicitationWhereInput[] = [{ userId: auth.user.id }];
-
-  if (auth.roles.includes("requisition_approver")) {
-    visibility.push({ requestType: "internal_requisition" });
-  }
-
-  if (auth.roles.includes("stock")) {
-    visibility.push({
-      requestType: "internal_requisition",
-      approvalStatus: { in: releasedForStock },
-    });
-  }
-
-  return { OR: visibility };
-}
 
 function toSolicitationResponse(solicitation: {
   id: string;
@@ -99,7 +53,7 @@ export const solicitationRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const { page, limit, status, search } = query.data;
-    const filters: Prisma.SolicitationWhereInput[] = [accessFilter(request.auth!)];
+    const filters: Prisma.SolicitationWhereInput[] = [solicitationAccessFilter(request.auth!)];
 
     if (status) {
       filters.push({ status });

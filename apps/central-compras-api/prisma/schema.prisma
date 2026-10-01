@@ -151,9 +151,9 @@ model Attachment {
   solicitationId String       @map("solicitation_id") @db.Uuid
   uploadedBy     String       @map("uploaded_by") @db.Uuid
   attachmentType String       @map("attachment_type")
-  fileName       String       @map("file_name")
-  filePath       String       @map("file_path")
-  fileSize       Int?         @map("file_size")
+  originalName   String       @map("file_name")
+  storagePath    String       @map("file_path")
+  size           Int?         @map("file_size")
   mimeType       String?      @map("mime_type")
   createdAt      DateTime     @default(now()) @map("created_at")
   solicitation   Solicitation @relation(fields: [solicitationId], references: [id], onDelete: Cascade)

@@ -5,3 +5,6 @@ src/generated/
 .env.local
 .env.*.local
 !.env.example
+.storage/
+uploads/
+tmp/

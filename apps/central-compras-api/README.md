@@ -183,7 +183,30 @@ Exemplos:
 { "status": "separating", "comment": "Itens em separação" }
 ```
 
-Uma aprovação interna válida cria ou atualiza o voto do ator, recalcula `approvedCount`, define `approvalStatus` como `approved_released` (ou `rejected`) e, quando liberada, inicia `stockStatus` como `pending_pickup`. Não há fluxo de cotações, múltiplas aprovações genéricas, cancelamento especializado, e-mail, WhatsApp ou anexos nesta etapa. Esses comportamentos do legado permanecem pendentes de migração explícita.
+Uma aprovação interna válida cria ou atualiza o voto do ator, recalcula `approvedCount`, define `approvalStatus` como `approved_released` (ou `rejected`) e, quando liberada, inicia `stockStatus` como `pending_pickup`. Não há fluxo de cotações, múltiplas aprovações genéricas, cancelamento especializado, e-mail ou WhatsApp nesta etapa. Esses comportamentos do legado permanecem pendentes de migração explícita.
+
+## Anexos e storage local de laboratório
+
+O storage atual é local, em `.storage/`, e é ignorado pelo Git. Ele substitui apenas o comportamento básico do bucket privado legado `solicitation-attachments`; Railway Bucket será avaliado numa etapa futura autorizada.
+
+Variável local:
+
+```text
+MAX_UPLOAD_BYTES="10485760"
+```
+
+Rotas:
+
+- `POST /solicitations/:id/attachments` — multipart/form-data com um único campo `file`;
+- `GET /solicitations/:id/attachments` — metadados autorizados;
+- `GET /attachments/:id/download` — arquivo binário autorizado;
+- `DELETE /attachments/:id` — somente `admin` neste laboratório.
+
+O dono pode enviar anexos para sua solicitação e `admin` para qualquer uma. A listagem e o download seguem a mesma regra de leitura de solicitações: dono, admin, `requisition_approver` para requisições internas e `stock` para internas liberadas. A exclusão do dono permanece pendente porque o legado não define uma regra segura e uniforme de edição.
+
+São aceitos PDF, imagens JPEG/PNG/WebP e documentos Office usuais, até `MAX_UPLOAD_BYTES`. O cliente nunca fornece caminho de storage: o servidor gera um UUID sob a pasta da solicitação, valida que o caminho resolve dentro de `.storage/`, e não devolve esse caminho nas respostas. Se a criação do registro no banco falhar após salvar o arquivo, o arquivo local é removido; a exclusão restaura o arquivo se a transação de banco falhar.
+
+Anexos, e-mail e WhatsApp continuam fora dos ambientes reais. Não há URL pública nem integração com Supabase Storage ou Railway Bucket nesta etapa.
 
 ## Scripts
 

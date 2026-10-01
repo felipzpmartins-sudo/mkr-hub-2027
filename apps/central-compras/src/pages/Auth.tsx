@@ -1,19 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
+import { useLabAuth } from "@/contexts/LabAuthContext";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight } from "lucide-react";
 import MkrRobot from "@/components/MkrRobot";
 
-const mustResetPassword = (user?: { user_metadata?: Record<string, unknown> } | null) =>
-  user?.user_metadata?.must_reset_password === true;
-
 const Auth = () => {
   const navigate = useNavigate();
+  const { user, loading: sessionLoading, login, logout } = useLabAuth();
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,76 +23,38 @@ const Auth = () => {
   const releaseLook = () => setRobotLook(null);
 
   useEffect(() => {
-    let isMounted = true;
+    if (sessionLoading || !user) return;
 
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!isMounted || !user) return;
+    if (user.mustResetPassword) {
+      void logout();
+      toast.error("A redefinição de senha ainda não está disponível neste laboratório.");
+      return;
+    }
 
-      navigate(mustResetPassword(user) ? "/reset-password" : "/");
-    };
-
-    checkUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [navigate]);
+    navigate("/", { replace: true });
+  }, [logout, navigate, sessionLoading, user]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) return toast.error("Digite um e-mail válido");
-    if (!fullName.trim()) return toast.error("Digite seu nome completo");
-    if (!phone.trim()) return toast.error("Digite seu telefone");
-    if (password.length < 6) return toast.error("A senha deve ter no mínimo 6 caracteres");
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: { full_name: fullName.trim(), phone: phone.trim() },
-        },
-      });
-      if (error) {
-        if (error.message?.includes('already registered')) return toast.error("Este e-mail já está cadastrado. Tente fazer login.");
-        if (error.message?.includes('rate limit')) return toast.error("Muitas tentativas. Aguarde alguns segundos.");
-        throw error;
-      }
-      if (data.user) {
-        toast.success("Conta criada com sucesso! Você já pode fazer login.");
-        setMode("login");
-        setPassword(""); setFullName(""); setPhone("");
-      }
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Erro ao criar conta";
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
+    toast.error("Criação de contas ainda não está disponível neste laboratório.");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      const authenticatedUser = await login(email, password);
 
-      if (mustResetPassword(data.user)) {
-        toast.success("Login realizado! Defina uma nova senha para continuar.");
-        navigate("/reset-password");
+      if (authenticatedUser.mustResetPassword) {
+        await logout();
+        toast.error("A redefinição de senha ainda não está disponível neste laboratório.");
         return;
       }
 
-      const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', data.user.id);
-      const isAdmin = roles?.some(r => r.role === 'admin');
       toast.success("Login realizado com sucesso!");
-      navigate(isAdmin ? "/admin" : "/");
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao fazer login");
+      navigate("/");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Erro ao fazer login");
     } finally {
       setLoading(false);
     }
@@ -274,9 +232,7 @@ const Auth = () => {
                     />
                     Lembrar meu acesso
                   </label>
-                  <a href="#" className="text-cyan-300/90 hover:text-cyan-200 transition-colors">
-                    Esqueci minha senha
-                  </a>
+                  <span className="text-slate-500">Recuperação em preparação</span>
                 </div>
 
                 <button
@@ -299,7 +255,7 @@ const Auth = () => {
                   Ainda não possui acesso?{" "}
                   <button
                     type="button"
-                    onClick={() => setMode("signup")}
+                    onClick={() => toast.error("Criação de contas ainda não está disponível neste laboratório.")}
                     className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors"
                   >
                     Solicitar acesso

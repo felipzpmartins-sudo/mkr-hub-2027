@@ -14,6 +14,24 @@ import { workflowRoutes } from "./routes/workflow.js";
 export function buildApp() {
   const app = Fastify({ logger: true });
 
+  app.addHook("onRequest", async (request, reply) => {
+    const origin = request.headers.origin;
+
+    // The lab only opts into the explicitly configured local Vite origin. It
+    // intentionally never falls back to a wildcard while cookies are enabled.
+    if (origin && env.CORS_ORIGIN && origin === env.CORS_ORIGIN) {
+      reply.header("Access-Control-Allow-Origin", origin);
+      reply.header("Access-Control-Allow-Credentials", "true");
+      reply.header("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+      reply.header("Access-Control-Allow-Headers", "Content-Type");
+      reply.header("Vary", "Origin");
+    }
+
+    if (request.method === "OPTIONS") {
+      return reply.code(204).send();
+    }
+  });
+
   registerErrorHandlers(app);
   app.register(multipart, { limits: { files: 1, fileSize: env.MAX_UPLOAD_BYTES } });
   app.addHook("preHandler", attachAuthContext);

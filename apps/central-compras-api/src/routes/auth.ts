@@ -25,6 +25,7 @@ function toLoginResponseUser(user: {
   fullName: string | null;
   phone: string | null;
   status: string;
+  mustResetPassword: boolean;
   profile: { fullName: string | null; phone: string | null; department: string | null } | null;
   roles: { role: string }[];
 }) {
@@ -34,6 +35,7 @@ function toLoginResponseUser(user: {
     fullName: user.fullName,
     phone: user.phone,
     status: user.status,
+    mustResetPassword: user.mustResetPassword,
     roles: user.roles.map(({ role }) => role),
     profile: user.profile
       ? {

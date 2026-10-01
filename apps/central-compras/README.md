@@ -1,46 +1,59 @@
 # Central de Compras — laboratório isolado
 
-Esta pasta é uma cópia de trabalho do frontend Vite da Central de Compras. Ela vive dentro do repositório do MKR Hub apenas para facilitar backup e evolução controlada. Não integra o Next.js, o login, o banco ou o deploy do Hub.
+Esta é uma cópia de trabalho do frontend Vite da Central de Compras dentro do repositório do MKR Hub. Ela não integra o Next.js, login, banco ou deploy do Hub.
 
-## Limites desta cópia
+## Escopo atual
 
-- A Central original continua sendo a referência e não deve ser alterada por este laboratório.
-- Não há SSO, redirecionamento pelo Hub, compartilhamento de sessão ou alteração de DNS.
-- Não use URL, chaves, usuários, banco, bucket ou funções da produção/Lovable nesta pasta.
-- `supabase/migrations/` e `supabase/functions/` são uma referência de código. Não aplique migrations, não faça `db push` e não execute deploy de funções a partir deste diretório.
-- `docs/pending-migrations/20260930170000_external_identity_mappings.sql` permanece deliberadamente pendente e não deve ser aplicado.
+O login da cópia usa exclusivamente a API local em `apps/central-compras-api`:
 
-## Ambiente de teste futuro
+- `POST /auth/login` cria uma sessão por cookie `HttpOnly`;
+- `GET /auth/me` e `GET /profile/me` restauram a sessão e mostram perfil e papéis no painel inicial;
+- `POST /auth/logout` revoga a sessão e retorna ao login;
+- nenhum token ou senha é gravado no `localStorage` ou no frontend.
 
-Quando existir um ambiente exclusivo de homologação, copie `.env.example` para `.env` e informe somente as credenciais públicas desse ambiente. Nunca versione `.env`.
+O painel inicial é propositalmente apenas de identidade. Solicitações, aprovações, estoque, anexos, notificações, criação de contas e recuperação de senha continuam fora deste fluxo. O código legado do Supabase é mantido como referência, mas essas telas não são expostas pelo roteamento do laboratório até que cada módulo seja conectado à API local. O campo legado `must_reset_password` é mapeado como `mustResetPassword`; ele bloqueia o acesso, pois a redefinição de senha própria ainda não foi implementada.
+
+## Limites de segurança
+
+- Não altera a Central original, Lovable, Supabase, Railway, DNS, SSO ou produção.
+- Não use URL, chave, usuário, banco, bucket ou função da produção nesta pasta.
+- Não aplique migrations, `db push` ou deploy a partir daqui.
+- `supabase/migrations/` e `supabase/functions/` são somente referências históricas.
+- `docs/pending-migrations/20260930170000_external_identity_mappings.sql` permanece deliberadamente pendente.
+
+## Execução local
+
+1. Na API, crie um `.env` local baseado no `.env.example`. Use somente o PostgreSQL descartável local e configure `CORS_ORIGIN="http://localhost:8080"`.
+2. Inicie a API em `apps/central-compras-api`:
 
 ```powershell
-Copy-Item .env.example .env
-npm ci
 npm run dev
 ```
 
-O Vite abre, por padrão, em `http://localhost:5173`. Antes de testar qualquer ação que grave dados, confirme que as duas variáveis apontam para a homologação exclusiva. Sem `.env`, o app não deve ser usado para operações.
+3. No frontend, crie `apps/central-compras/.env` contendo apenas:
+
+```dotenv
+VITE_CENTRAL_API_URL="http://localhost:4000"
+```
+
+4. Inicie o Vite em `apps/central-compras`:
+
+```powershell
+npm run dev
+```
+
+O Vite usa `http://localhost:8080`. O cookie é enviado apenas entre esse frontend local e a API local configurada.
+
+## Conta de teste local
+
+Após executar o seed da API, use a conta de laboratório descrita no README da API. Ela não pertence à Central de produção e só funciona no banco PostgreSQL local descartável.
 
 ## Build independente
 
 ```powershell
-npm ci
 npm run build
 ```
 
-O build desta pasta é independente do MKR Hub. Para proteger o Hub, sua verificação continua sendo executada na raiz do repositório:
+O build desta pasta é independente do MKR Hub. O build do Hub continua sendo executado na raiz do repositório.
 
-```powershell
-npm run build
-```
-
-## Organização
-
-```text
-apps/central-compras/  # aplicação Vite isolada
-src/                   # frontend React da Central
-supabase/              # referência de migrations e Edge Functions; não executar
-```
-
-Não inclua `.env`, `node_modules`, `dist`, chaves privadas, exportações de dados ou arquivos de Storage neste repositório.
+Não versione `.env`, `node_modules`, `dist`, chaves privadas, exportações de dados ou arquivos de Storage.

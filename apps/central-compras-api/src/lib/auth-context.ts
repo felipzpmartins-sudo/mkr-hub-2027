@@ -8,6 +8,7 @@ export type AuthenticatedUser = {
   fullName: string | null;
   phone: string | null;
   status: string;
+  mustResetPassword: boolean;
 };
 
 export type AuthenticatedProfile = {
@@ -35,6 +36,7 @@ function toAuthContext(session: {
     fullName: string | null;
     phone: string | null;
     status: string;
+    mustResetPassword: boolean;
     profile: { fullName: string | null; phone: string | null; department: string | null } | null;
     roles: { role: string }[];
   };
@@ -46,6 +48,7 @@ function toAuthContext(session: {
       fullName: session.user.fullName,
       phone: session.user.phone,
       status: session.user.status,
+      mustResetPassword: session.user.mustResetPassword,
     },
     profile: session.user.profile,
     roles: session.user.roles.map(({ role }) => role),
@@ -93,6 +96,7 @@ export function toPublicAuthUser(auth: AuthContext) {
     fullName: auth.user.fullName,
     phone: auth.user.phone,
     status: auth.user.status,
+    mustResetPassword: auth.user.mustResetPassword,
     profile: auth.profile,
     roles: auth.roles,
   };

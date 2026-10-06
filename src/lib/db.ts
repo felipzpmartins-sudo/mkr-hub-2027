@@ -21,11 +21,24 @@ let ssoColumnReady: Promise<void> | undefined;
  * existing rows.
  */
 export function ensureHubSchema() {
-  ssoColumnReady ??= db
-    .$executeRawUnsafe(
-      'ALTER TABLE "user_system_access" ADD COLUMN IF NOT EXISTS "encrypted_external_secret" TEXT',
-    )
-    .then(async () => {
+  ssoColumnReady ??= (async () => {
+      await db.$executeRawUnsafe(
+        'ALTER TABLE "user_system_access" ADD COLUMN IF NOT EXISTS "encrypted_external_secret" TEXT',
+      );
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "sso_tickets" (
+          "id" TEXT NOT NULL PRIMARY KEY,
+          "token_hash" TEXT NOT NULL,
+          "encrypted_payload" TEXT NOT NULL,
+          "expires_at" TIMESTAMP(3) NOT NULL,
+          "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "user_id" TEXT NOT NULL
+        )
+      `);
+      await db.$executeRawUnsafe('CREATE UNIQUE INDEX IF NOT EXISTS "sso_tickets_token_hash_key" ON "sso_tickets"("token_hash")');
+      await db.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "sso_tickets_expires_at_idx" ON "sso_tickets"("expires_at")');
+      await db.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "sso_tickets_user_id_expires_at_idx" ON "sso_tickets"("user_id", "expires_at")');
+
       // Keep the catalog aligned with the deployed services. These are all
       // reachable through MKR HUB; Wallet can still enforce its separate
       // authorization request after the person clicks it.
@@ -45,6 +58,6 @@ export function ensureHubSchema() {
             }),
           ),
       );
-    });
+    })();
   return ssoColumnReady;
 }

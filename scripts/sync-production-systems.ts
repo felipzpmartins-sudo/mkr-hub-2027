@@ -51,6 +51,13 @@ const systemDefinitions: SystemDefinition[] = [
 const systems = systemDefinitions.filter((system): system is ProductionSystem => !!system.url);
 
 async function main() {
+  // Railway can retain a database from an earlier deployment where this
+  // additive migration was not recorded. Ensure the SSO secret column exists
+  // before dashboard queries use it. This never removes or rewrites data.
+  await db.$executeRawUnsafe(
+    'ALTER TABLE "user_system_access" ADD COLUMN IF NOT EXISTS "encrypted_external_secret" TEXT',
+  );
+
   for (const system of systems) {
     await db.system.upsert({
       where: { slug: system.slug },

@@ -2,7 +2,7 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": { "builder": "DOCKERFILE", "dockerfilePath": "Dockerfile" },
   "deploy": {
-    "preDeployCommand": "npm run db:deploy",
+    "preDeployCommand": "npm run db:deploy && node --import tsx scripts/sync-production-systems.ts",
     "startCommand": "npm run start",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120,

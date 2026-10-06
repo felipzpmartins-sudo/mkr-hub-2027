@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node --env-file=.env server/index.js",
+    "start": "node server/index.js",
     "db:start": "tsx scripts/start-local-postgres.ts",
     "db:restore": "tsx scripts/restore-database-backup.ts",
     "test": "vitest run",

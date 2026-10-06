@@ -1,6 +1,7 @@
-import { db } from "@/lib/db";
+import { db, ensureHubSchema } from "@/lib/db";
 
-export function findUserSystems(userId: string, search = "") {
+export async function findUserSystems(userId: string, search = "") {
+  await ensureHubSchema();
   return db.userSystemAccess.findMany({
     where: {
       userId,
@@ -21,6 +22,7 @@ export function findUserSystems(userId: string, search = "") {
 
 /** The HUB is a catalog: every signed-in person can discover every registered system. */
 export async function findWorkspaceSystems(userId: string, search = "") {
+  await ensureHubSchema();
   const systemFilter = search
     ? {
         OR: [

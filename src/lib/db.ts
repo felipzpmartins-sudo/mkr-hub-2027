@@ -12,3 +12,19 @@ export const db =
     }),
   });
 if (process.env.NODE_ENV !== "production") globalDb.prisma = db;
+
+let ssoColumnReady: Promise<void> | undefined;
+
+/**
+ * Supports databases created before the SSO secret field was introduced.
+ * This is an idempotent, additive migration and deliberately preserves all
+ * existing rows.
+ */
+export function ensureHubSchema() {
+  ssoColumnReady ??= db
+    .$executeRawUnsafe(
+      'ALTER TABLE "user_system_access" ADD COLUMN IF NOT EXISTS "encrypted_external_secret" TEXT',
+    )
+    .then(() => undefined);
+  return ssoColumnReady;
+}

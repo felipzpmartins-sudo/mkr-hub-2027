@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
+import { db, ensureHubSchema } from "@/lib/db";
 import { auth } from "@/auth";
 import { requireAdmin, requireUser } from "@/services/authorization";
 import {
@@ -49,6 +49,9 @@ export async function saveSystem(_: FormState, form: FormData): Promise<FormStat
 }
 
 export async function launchSystem(form: FormData) {
+  // The first request after an upgrade may be a system launch rather than the
+  // dashboard render. Repair the additive SSO schema before reading access.
+  await ensureHubSchema();
   const user = await requireUser();
   const session = await auth();
   const systemId = String(form.get("systemId") || "");
@@ -141,6 +144,7 @@ export async function launchSystem(form: FormData) {
  * external Wallet account on the person's behalf.
  */
 export async function requestMakerWalletAccess() {
+  await ensureHubSchema();
   const user = await requireUser();
   const system = await db.system.findUnique({ where: { slug: "maker-wallet" } });
   if (!system) redirect("/dashboard?notice=unavailable");

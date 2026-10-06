@@ -28,7 +28,17 @@ const optionalExternalText = z
 export function isSafeSystemUrl(value: string) {
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && !url.username && !url.password && !url.search && !url.hash;
+    const localPreviewUrl =
+      process.env.ALLOW_LOCAL_SYSTEM_URLS === "true" &&
+      url.protocol === "http:" &&
+      (url.hostname === "127.0.0.1" || url.hostname === "localhost");
+    return (
+      (url.protocol === "https:" || localPreviewUrl) &&
+      !url.username &&
+      !url.password &&
+      !url.search &&
+      !url.hash
+    );
   } catch {
     return false;
   }

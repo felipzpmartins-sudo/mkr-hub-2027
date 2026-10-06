@@ -36,6 +36,7 @@ export type UserSystemAccessMinAggregateOutputType = {
   externalProvider: string | null
   externalIssuer: string | null
   externalSubject: string | null
+  encryptedExternalSecret: string | null
   status: $Enums.ExternalLinkStatus | null
   linkedBy: string | null
   linkedAt: Date | null
@@ -55,6 +56,7 @@ export type UserSystemAccessMaxAggregateOutputType = {
   externalProvider: string | null
   externalIssuer: string | null
   externalSubject: string | null
+  encryptedExternalSecret: string | null
   status: $Enums.ExternalLinkStatus | null
   linkedBy: string | null
   linkedAt: Date | null
@@ -74,6 +76,7 @@ export type UserSystemAccessCountAggregateOutputType = {
   externalProvider: number
   externalIssuer: number
   externalSubject: number
+  encryptedExternalSecret: number
   status: number
   linkedBy: number
   linkedAt: number
@@ -95,6 +98,7 @@ export type UserSystemAccessMinAggregateInputType = {
   externalProvider?: true
   externalIssuer?: true
   externalSubject?: true
+  encryptedExternalSecret?: true
   status?: true
   linkedBy?: true
   linkedAt?: true
@@ -114,6 +118,7 @@ export type UserSystemAccessMaxAggregateInputType = {
   externalProvider?: true
   externalIssuer?: true
   externalSubject?: true
+  encryptedExternalSecret?: true
   status?: true
   linkedBy?: true
   linkedAt?: true
@@ -133,6 +138,7 @@ export type UserSystemAccessCountAggregateInputType = {
   externalProvider?: true
   externalIssuer?: true
   externalSubject?: true
+  encryptedExternalSecret?: true
   status?: true
   linkedBy?: true
   linkedAt?: true
@@ -225,6 +231,7 @@ export type UserSystemAccessGroupByOutputType = {
   externalProvider: string | null
   externalIssuer: string | null
   externalSubject: string | null
+  encryptedExternalSecret: string | null
   status: $Enums.ExternalLinkStatus
   linkedBy: string | null
   linkedAt: Date | null
@@ -265,6 +272,7 @@ export type UserSystemAccessWhereInput = {
   externalProvider?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   externalIssuer?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   externalSubject?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
+  encryptedExternalSecret?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   status?: Prisma.EnumExternalLinkStatusFilter<"UserSystemAccess"> | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   linkedAt?: Prisma.DateTimeNullableFilter<"UserSystemAccess"> | Date | string | null
@@ -287,6 +295,7 @@ export type UserSystemAccessOrderByWithRelationInput = {
   externalProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   externalIssuer?: Prisma.SortOrderInput | Prisma.SortOrder
   externalSubject?: Prisma.SortOrderInput | Prisma.SortOrder
+  encryptedExternalSecret?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   linkedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   linkedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -313,6 +322,7 @@ export type UserSystemAccessWhereUniqueInput = Prisma.AtLeast<{
   externalProvider?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   externalIssuer?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   externalSubject?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
+  encryptedExternalSecret?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   status?: Prisma.EnumExternalLinkStatusFilter<"UserSystemAccess"> | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   linkedAt?: Prisma.DateTimeNullableFilter<"UserSystemAccess"> | Date | string | null
@@ -335,6 +345,7 @@ export type UserSystemAccessOrderByWithAggregationInput = {
   externalProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   externalIssuer?: Prisma.SortOrderInput | Prisma.SortOrder
   externalSubject?: Prisma.SortOrderInput | Prisma.SortOrder
+  encryptedExternalSecret?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   linkedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   linkedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -360,6 +371,7 @@ export type UserSystemAccessScalarWhereWithAggregatesInput = {
   externalProvider?: Prisma.StringNullableWithAggregatesFilter<"UserSystemAccess"> | string | null
   externalIssuer?: Prisma.StringNullableWithAggregatesFilter<"UserSystemAccess"> | string | null
   externalSubject?: Prisma.StringNullableWithAggregatesFilter<"UserSystemAccess"> | string | null
+  encryptedExternalSecret?: Prisma.StringNullableWithAggregatesFilter<"UserSystemAccess"> | string | null
   status?: Prisma.EnumExternalLinkStatusWithAggregatesFilter<"UserSystemAccess"> | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.StringNullableWithAggregatesFilter<"UserSystemAccess"> | string | null
   linkedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"UserSystemAccess"> | Date | string | null
@@ -377,6 +389,7 @@ export type UserSystemAccessCreateInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedAt?: Date | string | null
   createdAt?: Date | string
@@ -398,6 +411,7 @@ export type UserSystemAccessUncheckedCreateInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedBy?: string | null
   linkedAt?: Date | string | null
@@ -415,6 +429,7 @@ export type UserSystemAccessUpdateInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -436,6 +451,7 @@ export type UserSystemAccessUncheckedUpdateInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -455,6 +471,7 @@ export type UserSystemAccessCreateManyInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedBy?: string | null
   linkedAt?: Date | string | null
@@ -472,6 +489,7 @@ export type UserSystemAccessUpdateManyMutationInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -490,6 +508,7 @@ export type UserSystemAccessUncheckedUpdateManyInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -524,6 +543,7 @@ export type UserSystemAccessCountOrderByAggregateInput = {
   externalProvider?: Prisma.SortOrder
   externalIssuer?: Prisma.SortOrder
   externalSubject?: Prisma.SortOrder
+  encryptedExternalSecret?: Prisma.SortOrder
   status?: Prisma.SortOrder
   linkedBy?: Prisma.SortOrder
   linkedAt?: Prisma.SortOrder
@@ -543,6 +563,7 @@ export type UserSystemAccessMaxOrderByAggregateInput = {
   externalProvider?: Prisma.SortOrder
   externalIssuer?: Prisma.SortOrder
   externalSubject?: Prisma.SortOrder
+  encryptedExternalSecret?: Prisma.SortOrder
   status?: Prisma.SortOrder
   linkedBy?: Prisma.SortOrder
   linkedAt?: Prisma.SortOrder
@@ -562,6 +583,7 @@ export type UserSystemAccessMinOrderByAggregateInput = {
   externalProvider?: Prisma.SortOrder
   externalIssuer?: Prisma.SortOrder
   externalSubject?: Prisma.SortOrder
+  encryptedExternalSecret?: Prisma.SortOrder
   status?: Prisma.SortOrder
   linkedBy?: Prisma.SortOrder
   linkedAt?: Prisma.SortOrder
@@ -717,6 +739,7 @@ export type UserSystemAccessCreateWithoutUserInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedAt?: Date | string | null
   createdAt?: Date | string
@@ -736,6 +759,7 @@ export type UserSystemAccessUncheckedCreateWithoutUserInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedBy?: string | null
   linkedAt?: Date | string | null
@@ -763,6 +787,7 @@ export type UserSystemAccessCreateWithoutLinkedByUserInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedAt?: Date | string | null
   createdAt?: Date | string
@@ -783,6 +808,7 @@ export type UserSystemAccessUncheckedCreateWithoutLinkedByUserInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedAt?: Date | string | null
   createdAt?: Date | string
@@ -830,6 +856,7 @@ export type UserSystemAccessScalarWhereInput = {
   externalProvider?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   externalIssuer?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   externalSubject?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
+  encryptedExternalSecret?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   status?: Prisma.EnumExternalLinkStatusFilter<"UserSystemAccess"> | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.StringNullableFilter<"UserSystemAccess"> | string | null
   linkedAt?: Prisma.DateTimeNullableFilter<"UserSystemAccess"> | Date | string | null
@@ -863,6 +890,7 @@ export type UserSystemAccessCreateWithoutSystemInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedAt?: Date | string | null
   createdAt?: Date | string
@@ -882,6 +910,7 @@ export type UserSystemAccessUncheckedCreateWithoutSystemInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedBy?: string | null
   linkedAt?: Date | string | null
@@ -926,6 +955,7 @@ export type UserSystemAccessCreateManyUserInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedBy?: string | null
   linkedAt?: Date | string | null
@@ -945,6 +975,7 @@ export type UserSystemAccessCreateManyLinkedByUserInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedAt?: Date | string | null
   createdAt?: Date | string
@@ -961,6 +992,7 @@ export type UserSystemAccessUpdateWithoutUserInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -980,6 +1012,7 @@ export type UserSystemAccessUncheckedUpdateWithoutUserInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -998,6 +1031,7 @@ export type UserSystemAccessUncheckedUpdateManyWithoutUserInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1015,6 +1049,7 @@ export type UserSystemAccessUpdateWithoutLinkedByUserInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1035,6 +1070,7 @@ export type UserSystemAccessUncheckedUpdateWithoutLinkedByUserInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1053,6 +1089,7 @@ export type UserSystemAccessUncheckedUpdateManyWithoutLinkedByUserInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1070,6 +1107,7 @@ export type UserSystemAccessCreateManySystemInput = {
   externalProvider?: string | null
   externalIssuer?: string | null
   externalSubject?: string | null
+  encryptedExternalSecret?: string | null
   status?: $Enums.ExternalLinkStatus
   linkedBy?: string | null
   linkedAt?: Date | string | null
@@ -1087,6 +1125,7 @@ export type UserSystemAccessUpdateWithoutSystemInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1106,6 +1145,7 @@ export type UserSystemAccessUncheckedUpdateWithoutSystemInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1124,6 +1164,7 @@ export type UserSystemAccessUncheckedUpdateManyWithoutSystemInput = {
   externalProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalIssuer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   externalSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  encryptedExternalSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumExternalLinkStatusFieldUpdateOperationsInput | $Enums.ExternalLinkStatus
   linkedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1145,6 +1186,7 @@ export type UserSystemAccessSelect<ExtArgs extends runtime.Types.Extensions.Inte
   externalProvider?: boolean
   externalIssuer?: boolean
   externalSubject?: boolean
+  encryptedExternalSecret?: boolean
   status?: boolean
   linkedBy?: boolean
   linkedAt?: boolean
@@ -1167,6 +1209,7 @@ export type UserSystemAccessSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   externalProvider?: boolean
   externalIssuer?: boolean
   externalSubject?: boolean
+  encryptedExternalSecret?: boolean
   status?: boolean
   linkedBy?: boolean
   linkedAt?: boolean
@@ -1189,6 +1232,7 @@ export type UserSystemAccessSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   externalProvider?: boolean
   externalIssuer?: boolean
   externalSubject?: boolean
+  encryptedExternalSecret?: boolean
   status?: boolean
   linkedBy?: boolean
   linkedAt?: boolean
@@ -1211,6 +1255,7 @@ export type UserSystemAccessSelectScalar = {
   externalProvider?: boolean
   externalIssuer?: boolean
   externalSubject?: boolean
+  encryptedExternalSecret?: boolean
   status?: boolean
   linkedBy?: boolean
   linkedAt?: boolean
@@ -1218,7 +1263,7 @@ export type UserSystemAccessSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UserSystemAccessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "systemId" | "enabled" | "role" | "externalUserId" | "externalUserEmail" | "externalDisplayName" | "externalProvider" | "externalIssuer" | "externalSubject" | "status" | "linkedBy" | "linkedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["userSystemAccess"]>
+export type UserSystemAccessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "systemId" | "enabled" | "role" | "externalUserId" | "externalUserEmail" | "externalDisplayName" | "externalProvider" | "externalIssuer" | "externalSubject" | "encryptedExternalSecret" | "status" | "linkedBy" | "linkedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["userSystemAccess"]>
 export type UserSystemAccessInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   system?: boolean | Prisma.SystemDefaultArgs<ExtArgs>
@@ -1254,6 +1299,7 @@ export type $UserSystemAccessPayload<ExtArgs extends runtime.Types.Extensions.In
     externalProvider: string | null
     externalIssuer: string | null
     externalSubject: string | null
+    encryptedExternalSecret: string | null
     status: $Enums.ExternalLinkStatus
     linkedBy: string | null
     linkedAt: Date | null
@@ -1696,6 +1742,7 @@ export interface UserSystemAccessFieldRefs {
   readonly externalProvider: Prisma.FieldRef<"UserSystemAccess", 'String'>
   readonly externalIssuer: Prisma.FieldRef<"UserSystemAccess", 'String'>
   readonly externalSubject: Prisma.FieldRef<"UserSystemAccess", 'String'>
+  readonly encryptedExternalSecret: Prisma.FieldRef<"UserSystemAccess", 'String'>
   readonly status: Prisma.FieldRef<"UserSystemAccess", 'ExternalLinkStatus'>
   readonly linkedBy: Prisma.FieldRef<"UserSystemAccess", 'String'>
   readonly linkedAt: Prisma.FieldRef<"UserSystemAccess", 'DateTime'>

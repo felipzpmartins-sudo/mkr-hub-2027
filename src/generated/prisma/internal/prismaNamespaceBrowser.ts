@@ -55,7 +55,8 @@ export const ModelName = {
   System: 'System',
   UserSystemAccess: 'UserSystemAccess',
   AuditLog: 'AuditLog',
-  LoginAttempt: 'LoginAttempt'
+  LoginAttempt: 'LoginAttempt',
+  SsoTicket: 'SsoTicket'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -119,6 +120,7 @@ export const UserSystemAccessScalarFieldEnum = {
   externalProvider: 'externalProvider',
   externalIssuer: 'externalIssuer',
   externalSubject: 'externalSubject',
+  encryptedExternalSecret: 'encryptedExternalSecret',
   status: 'status',
   linkedBy: 'linkedBy',
   linkedAt: 'linkedAt',
@@ -149,6 +151,18 @@ export const LoginAttemptScalarFieldEnum = {
 } as const
 
 export type LoginAttemptScalarFieldEnum = (typeof LoginAttemptScalarFieldEnum)[keyof typeof LoginAttemptScalarFieldEnum]
+
+
+export const SsoTicketScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  encryptedPayload: 'encryptedPayload',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  userId: 'userId'
+} as const
+
+export type SsoTicketScalarFieldEnum = (typeof SsoTicketScalarFieldEnum)[keyof typeof SsoTicketScalarFieldEnum]
 
 
 export const SortOrder = {

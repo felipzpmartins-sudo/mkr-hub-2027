@@ -42,3 +42,8 @@ export type AuditLog = Prisma.AuditLogModel
  * 
  */
 export type LoginAttempt = Prisma.LoginAttemptModel
+/**
+ * Model SsoTicket
+ * 
+ */
+export type SsoTicket = Prisma.SsoTicketModel

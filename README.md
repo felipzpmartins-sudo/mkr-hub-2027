@@ -14,7 +14,7 @@ Portal corporativo de identidade, permissões e acesso aos sistemas internos. De
 - Página de configurações com políticas efetivas e estado do catálogo.
 - Health check, migration inicial e configuração de deploy no Railway.
 
-Os bancos dos sistemas externos continuam independentes. Esta versão **não implementa SSO** e não altera a autenticação das aplicações externas.
+Os bancos dos sistemas externos continuam independentes. Esta versão implementa SSO somente para o Central de Compras; os demais sistemas seguem com integrações independentes.
 
 ## Requisitos
 
@@ -42,6 +42,10 @@ AUTH_SECRET="SEGREDO_ALEATORIO_GERADO_LOCALMENTE"
 AUTH_URL="http://localhost:3000"
 AUTH_TRUST_HOST="true"
 TRUST_PROXY="false"
+CENTRAL_PURCHASES_SUPABASE_URL="https://SEU-PROJETO.supabase.co"
+CENTRAL_PURCHASES_SUPABASE_ANON_KEY="SUA_CHAVE_PUBLICA_DO_SUPABASE"
+CENTRAL_PURCHASES_ORIGIN="https://central-compras.exemplo.com"
+HUB_SSO_ENCRYPTION_KEY="SEGREDO_ALEATORIO_EXCLUSIVO_PARA_SSO"
 ```
 
 Esses valores são placeholders. Use um banco exclusivo para o HUB. Caracteres especiais na senha da conexão precisam de percent-encoding. Em produção, use a conexão e a configuração TLS fornecidas pelo serviço de PostgreSQL; não desabilite a verificação do certificado.
@@ -52,7 +56,7 @@ Gere um segredo forte para `AUTH_SECRET`:
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-Não versione `.env`. O projeto o exclui tanto do Git quanto do contexto do Docker.
+Não versione `.env`. O projeto o exclui tanto do Git quanto do contexto do Docker. Consulte [docs/CENTRAL-DE-COMPRAS-SSO.md](docs/CENTRAL-DE-COMPRAS-SSO.md) para configurar as variáveis no HUB e no build do Central de Compras.
 
 Se o PowerShell bloquear `npm.ps1` ou `npx.ps1`, use `npm.cmd` e `npx.cmd`. Não é necessário alterar a política de execução do Windows.
 
@@ -118,7 +122,7 @@ npm run start
 
 O status do sistema é manual; `ONLINE` não representa uma verificação automática de disponibilidade. O usuário vê somente aplicações com acesso habilitado. Sistemas offline ou em manutenção aparecem com acesso indisponível.
 
-As URLs são armazenadas no banco e aceitam HTTPS sem credenciais, query string ou fragmento. O botão **Acessar** envia uma Server Action, revalida o usuário e a permissão, grava `SYSTEM_ACCESSED` e faz o redirecionamento. A aplicação externa pode pedir seu próprio login.
+As URLs são armazenadas no banco e aceitam HTTPS sem credenciais, query string ou fragmento. O botão **Acessar** envia uma Server Action, revalida o usuário e a permissão e grava `SYSTEM_ACCESSED`. Para o Central de Compras, ele emite um código opaco, de uso único e curto; o Central o troca por uma sessão Supabase sem nova senha. Outras aplicações podem pedir seu próprio login.
 
 ## Segurança e decisões de implementação
 
@@ -133,7 +137,7 @@ As URLs são armazenadas no banco e aceitam HTTPS sem credenciais, query string 
 - Alterações administrativas e seus registros de auditoria são atômicos. Não há interface para excluir auditoria ou usuários.
 - O administrador não pode desativar nem rebaixar sua própria conta. As alterações de administradores usam um lock transacional para preservar pelo menos um administrador ativo.
 - Logs registram ator, ação, destino, data, IP quando confiável e metadados selecionados. Senhas e tokens não são gravados em metadados.
-- O banco do HUB não armazena senhas de aplicações externas. Os vínculos externos são somente identificadores para integração futura.
+- O banco do HUB não armazena senhas de aplicações externas. Na passagem SSO, os tokens do Central ficam cifrados por no máximo 90 segundos e são removidos no primeiro uso; eles não entram na URL, nos logs ou na auditoria.
 
 O usuário da aplicação no PostgreSQL deve ter apenas os privilégios necessários. Backups, retenção dos logs, gestão de segredos e acesso administrativo à infraestrutura são políticas operacionais da empresa. As políticas exibidas em **Configurações** são versionadas em código; a tela não contém opções sem efeito.
 
@@ -143,7 +147,7 @@ O repositório inclui `Dockerfile`, `.dockerignore` e `railway.json`. O deploy n
 
 1. Publique o projeto em um repositório privado e conecte-o a um novo serviço no Railway.
 2. Adicione um serviço PostgreSQL exclusivo do HUB.
-3. No serviço web, configure `DATABASE_URL` com uma referência à conexão do PostgreSQL, `AUTH_SECRET` com um segredo forte, `AUTH_URL` com o domínio HTTPS público e `AUTH_TRUST_HOST=true`.
+3. No serviço web, configure `DATABASE_URL` com uma referência à conexão do PostgreSQL, `AUTH_SECRET` com um segredo forte, `AUTH_URL` com o domínio HTTPS público e `AUTH_TRUST_HOST=true`. Para o Central de Compras, configure também as quatro variáveis `CENTRAL_PURCHASES_*` e `HUB_SSO_ENCRYPTION_KEY` descritas em `docs/CENTRAL-DE-COMPRAS-SSO.md`.
 4. Mantenha `TRUST_PROXY=false` até confirmar a sanitização de `x-forwarded-for` pelo proxy utilizado.
 5. O Railway utilizará o Dockerfile. O comando de pré-deploy aplica `npm run db:deploy`; o início usa `npm run start`, que respeita a variável `PORT` e escuta em `0.0.0.0`.
 6. Após o primeiro deploy, execute **dentro do container do serviço web** `npm run db:seed` e `npm run admin:create`, com as variáveis temporárias do administrador configuradas. Isso permite usar a conexão privada do PostgreSQL. Remova as variáveis de bootstrap em seguida.
@@ -191,7 +195,7 @@ docs/              evolução da identidade e do SSO
 
 ## Evolução para SSO
 
-Consulte [docs/SSO.md](docs/SSO.md). A integração futura deverá usar um provedor e protocolos apropriados, preservar o identificador central e mapear as contas existentes sem fundir bancos. Não há emissão de tokens para aplicações externas nesta entrega.
+Consulte [docs/CENTRAL-DE-COMPRAS-SSO.md](docs/CENTRAL-DE-COMPRAS-SSO.md) para configurar o Central de Compras. As próximas integrações devem usar um fluxo equivalente de código de uso único ou OpenID Connect, preservando identificadores e bancos existentes.
 
 ## Referências
 

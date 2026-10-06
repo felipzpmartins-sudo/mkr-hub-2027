@@ -1,0 +1,1 @@
+ALTER TABLE public.video_requests ADD COLUMN IF NOT EXISTS drive_url TEXT;

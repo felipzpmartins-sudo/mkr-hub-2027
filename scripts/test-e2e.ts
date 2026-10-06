@@ -5,8 +5,12 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { Client } from "pg";
 import { createServer } from "node:net";
 import { resolve } from "node:path";
+import { config as loadEnv } from "dotenv";
 
 const demoPreview = process.env.DEMO_PREVIEW === "true";
+const localSsoPreview = process.env.LOCAL_SSO_PREVIEW === "true";
+let centralPurchasesEnv: Record<string, string> = {};
+let centralMarketingEnv: Record<string, string> = {};
 
 async function freePort() {
   const server = createServer();
@@ -18,7 +22,14 @@ async function freePort() {
 }
 
 async function main() {
-  const [dbPort, appPort] = await Promise.all([freePort(), freePort()]);
+  if (localSsoPreview) {
+    centralPurchasesEnv =
+      loadEnv({ path: resolve(process.cwd(), "purchase-hub-8d0d9110", ".env") }).parsed ?? {};
+    centralMarketingEnv =
+      loadEnv({ path: resolve(process.cwd(), "centraldesolicitacao", ".env") }).parsed ?? {};
+  }
+  const dbPort = await freePort();
+  const appPort = localSsoPreview ? 3000 : await freePort();
   const password = randomBytes(24).toString("hex");
   // Windows PostgreSQL binaries require an ASCII path when the home directory has accents.
   const workspace =
@@ -52,6 +63,24 @@ async function main() {
     ADMIN_PASSWORD: demoPreview ? "MKRDemo2027!" : randomBytes(24).toString("hex"),
     TEST_USER_PASSWORD: randomBytes(24).toString("hex"),
     TEST_ARTIFACT_DIR: directory,
+    ...(localSsoPreview
+      ? {
+          CENTRAL_PURCHASES_SUPABASE_URL: centralPurchasesEnv.VITE_SUPABASE_URL,
+          CENTRAL_PURCHASES_SUPABASE_ANON_KEY: centralPurchasesEnv.VITE_SUPABASE_PUBLISHABLE_KEY,
+          CENTRAL_PURCHASES_ORIGIN: "http://127.0.0.1:4173",
+          CENTRAL_MARKETING_SUPABASE_URL: centralMarketingEnv.VITE_SUPABASE_URL,
+          CENTRAL_MARKETING_SUPABASE_ANON_KEY: centralMarketingEnv.VITE_SUPABASE_PUBLISHABLE_KEY,
+          CENTRAL_MARKETING_ORIGIN: "http://127.0.0.1:4174",
+          MAKER_WALLET_API_URL: "http://127.0.0.1:3333",
+          MAKER_WALLET_ORIGIN: "http://127.0.0.1:4175",
+          MAKER_WALLET_REGISTRATION_INVITE_CODE: "maker-wallet-convite",
+          CENTRAL_VIDEO_API_URL: "http://127.0.0.1:8080",
+          CENTRAL_VIDEO_ORIGIN: "http://127.0.0.1:4176",
+          CENTRAL_VIDEO_HUB_PROVISION_KEY: "mkr-local-video-provision-2027",
+          HUB_SSO_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+          ALLOW_LOCAL_SYSTEM_URLS: "true",
+        }
+      : {}),
   };
   const databaseDir = resolve(directory, "postgres");
   let cluster: {
@@ -175,6 +204,7 @@ async function main() {
     await run(["--import", "tsx", "prisma/seed.ts"]);
     await run(["--import", "tsx", "scripts/create-admin.ts"]);
     if (demoPreview) await run(["--import", "tsx", "scripts/setup-demo.ts"]);
+    if (localSsoPreview) await run(["--import", "tsx", "scripts/setup-local-sso-preview.ts"]);
     app = spawn(
       process.execPath,
       ["node_modules/next/dist/bin/next", "start", "-p", String(appPort), "-H", "127.0.0.1"],
@@ -198,10 +228,12 @@ async function main() {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
     if (!ready) throw new Error("Test server did not start; inspect the local server log.");
-    if (demoPreview) {
+    if (demoPreview || localSsoPreview) {
       console.log(`Demo pronta em ${environment.AUTH_URL}`);
-      console.log(`Login: ${environment.ADMIN_EMAIL}`);
-      console.log(`Senha: ${environment.ADMIN_PASSWORD}`);
+      if (demoPreview) {
+        console.log(`Login: ${environment.ADMIN_EMAIL}`);
+        console.log(`Senha: ${environment.ADMIN_PASSWORD}`);
+      }
       await new Promise<void>(() => {});
     }
     await run(["node_modules/@playwright/test/cli.js", "test", ...process.argv.slice(2)]);

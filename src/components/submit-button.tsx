@@ -20,11 +20,19 @@ export function SubmitButton({
     </button>
   );
 }
-export function LaunchButton({ disabled, label }: { disabled: boolean; label: string }) {
+export function LaunchButton({
+  disabled,
+  label,
+  pendingLabel = "Abrindo...",
+}: {
+  disabled: boolean;
+  label: string;
+  pendingLabel?: string;
+}) {
   const { pending } = useFormStatus();
   return (
     <button className="launch-button" disabled={disabled || pending}>
-      {pending ? "Abrindo..." : label}
+      {pending ? pendingLabel : label}
       {pending ? <LoaderCircle className="spin" size={17} /> : <ArrowUpRight size={17} />}
     </button>
   );

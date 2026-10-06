@@ -6,6 +6,7 @@ import {
   House,
   LayoutGrid,
   UsersRound,
+  UserRoundCheck,
   PanelsTopLeft,
   KeyRound,
   ScrollText,
@@ -32,7 +33,12 @@ const admin = [
 export function Sidebar({
   user,
 }: {
-  user: { name: string; hubRole: string; department: string | null };
+  user: {
+    name: string;
+    hubRole: string;
+    department: string | null;
+    canViewAccountDirectory: boolean;
+  };
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -98,7 +104,23 @@ export function Sidebar({
           {user.hubRole === "ADMIN" && (
             <>
               <p className="nav-label admin-label">ADMINISTRAÇÃO</p>
-              {links(admin)}
+              {links(admin.slice(0, 1))}
+              {links(admin.slice(1))}
+            </>
+          )}
+          {user.canViewAccountDirectory && (
+            <>
+              {user.hubRole !== "ADMIN" && <p className="nav-label admin-label">ÁREA PRIVADA</p>}
+              <Link
+                href="/admin/accounts"
+                aria-current={pathname === "/admin/accounts" ? "page" : undefined}
+                className={`nav-link ${pathname === "/admin/accounts" ? "active" : ""}`}
+                onClick={() => setOpen(false)}
+              >
+                <UserRoundCheck size={18} />
+                <span>Contas</span>
+                {pathname === "/admin/accounts" && <span className="nav-dot" />}
+              </Link>
             </>
           )}
         </nav>

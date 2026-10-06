@@ -23,5 +23,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "purchase-hub-8d0d9110"]
+  "exclude": ["node_modules", "purchase-hub-8d0d9110", "centraldesolicitacao", "maker-wallet", "central-video"]
 }

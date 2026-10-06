@@ -401,7 +401,8 @@ export const ModelName = {
   System: 'System',
   UserSystemAccess: 'UserSystemAccess',
   AuditLog: 'AuditLog',
-  LoginAttempt: 'LoginAttempt'
+  LoginAttempt: 'LoginAttempt',
+  SsoTicket: 'SsoTicket'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -417,7 +418,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "system" | "userSystemAccess" | "auditLog" | "loginAttempt"
+    modelProps: "user" | "system" | "userSystemAccess" | "auditLog" | "loginAttempt" | "ssoTicket"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -791,6 +792,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    SsoTicket: {
+      payload: Prisma.$SsoTicketPayload<ExtArgs>
+      fields: Prisma.SsoTicketFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SsoTicketFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SsoTicketFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload>
+        }
+        findFirst: {
+          args: Prisma.SsoTicketFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SsoTicketFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload>
+        }
+        findMany: {
+          args: Prisma.SsoTicketFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload>[]
+        }
+        create: {
+          args: Prisma.SsoTicketCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload>
+        }
+        createMany: {
+          args: Prisma.SsoTicketCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SsoTicketCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload>[]
+        }
+        delete: {
+          args: Prisma.SsoTicketDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload>
+        }
+        update: {
+          args: Prisma.SsoTicketUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload>
+        }
+        deleteMany: {
+          args: Prisma.SsoTicketDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SsoTicketUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SsoTicketUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload>[]
+        }
+        upsert: {
+          args: Prisma.SsoTicketUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoTicketPayload>
+        }
+        aggregate: {
+          args: Prisma.SsoTicketAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSsoTicket>
+        }
+        groupBy: {
+          args: Prisma.SsoTicketGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SsoTicketGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SsoTicketCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SsoTicketCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -875,6 +950,7 @@ export const UserSystemAccessScalarFieldEnum = {
   externalProvider: 'externalProvider',
   externalIssuer: 'externalIssuer',
   externalSubject: 'externalSubject',
+  encryptedExternalSecret: 'encryptedExternalSecret',
   status: 'status',
   linkedBy: 'linkedBy',
   linkedAt: 'linkedAt',
@@ -905,6 +981,18 @@ export const LoginAttemptScalarFieldEnum = {
 } as const
 
 export type LoginAttemptScalarFieldEnum = (typeof LoginAttemptScalarFieldEnum)[keyof typeof LoginAttemptScalarFieldEnum]
+
+
+export const SsoTicketScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  encryptedPayload: 'encryptedPayload',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  userId: 'userId'
+} as const
+
+export type SsoTicketScalarFieldEnum = (typeof SsoTicketScalarFieldEnum)[keyof typeof SsoTicketScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1256,6 +1344,7 @@ export type GlobalOmitConfig = {
   userSystemAccess?: Prisma.UserSystemAccessOmit
   auditLog?: Prisma.AuditLogOmit
   loginAttempt?: Prisma.LoginAttemptOmit
+  ssoTicket?: Prisma.SsoTicketOmit
 }
 
 /* Types for Logging */

@@ -275,6 +275,7 @@ export type UserWhereInput = {
   accesses?: Prisma.UserSystemAccessListRelationFilter
   linkedAccesses?: Prisma.UserSystemAccessListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
+  ssoTickets?: Prisma.SsoTicketListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -293,6 +294,7 @@ export type UserOrderByWithRelationInput = {
   accesses?: Prisma.UserSystemAccessOrderByRelationAggregateInput
   linkedAccesses?: Prisma.UserSystemAccessOrderByRelationAggregateInput
   auditLogs?: Prisma.AuditLogOrderByRelationAggregateInput
+  ssoTickets?: Prisma.SsoTicketOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -314,6 +316,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   accesses?: Prisma.UserSystemAccessListRelationFilter
   linkedAccesses?: Prisma.UserSystemAccessListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
+  ssoTickets?: Prisma.SsoTicketListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -370,6 +373,7 @@ export type UserCreateInput = {
   accesses?: Prisma.UserSystemAccessCreateNestedManyWithoutUserInput
   linkedAccesses?: Prisma.UserSystemAccessCreateNestedManyWithoutLinkedByUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
+  ssoTickets?: Prisma.SsoTicketCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -388,6 +392,7 @@ export type UserUncheckedCreateInput = {
   accesses?: Prisma.UserSystemAccessUncheckedCreateNestedManyWithoutUserInput
   linkedAccesses?: Prisma.UserSystemAccessUncheckedCreateNestedManyWithoutLinkedByUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
+  ssoTickets?: Prisma.SsoTicketUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -406,6 +411,7 @@ export type UserUpdateInput = {
   accesses?: Prisma.UserSystemAccessUpdateManyWithoutUserNestedInput
   linkedAccesses?: Prisma.UserSystemAccessUpdateManyWithoutLinkedByUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
+  ssoTickets?: Prisma.SsoTicketUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -424,6 +430,7 @@ export type UserUncheckedUpdateInput = {
   accesses?: Prisma.UserSystemAccessUncheckedUpdateManyWithoutUserNestedInput
   linkedAccesses?: Prisma.UserSystemAccessUncheckedUpdateManyWithoutLinkedByUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
+  ssoTickets?: Prisma.SsoTicketUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -608,6 +615,20 @@ export type UserUpdateOneWithoutAuditLogsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAuditLogsInput, Prisma.UserUpdateWithoutAuditLogsInput>, Prisma.UserUncheckedUpdateWithoutAuditLogsInput>
 }
 
+export type UserCreateNestedOneWithoutSsoTicketsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSsoTicketsInput, Prisma.UserUncheckedCreateWithoutSsoTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSsoTicketsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutSsoTicketsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSsoTicketsInput, Prisma.UserUncheckedCreateWithoutSsoTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSsoTicketsInput
+  upsert?: Prisma.UserUpsertWithoutSsoTicketsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSsoTicketsInput, Prisma.UserUpdateWithoutSsoTicketsInput>, Prisma.UserUncheckedUpdateWithoutSsoTicketsInput>
+}
+
 export type UserCreateWithoutAccessesInput = {
   id?: string
   name: string
@@ -623,6 +644,7 @@ export type UserCreateWithoutAccessesInput = {
   updatedAt?: Date | string
   linkedAccesses?: Prisma.UserSystemAccessCreateNestedManyWithoutLinkedByUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
+  ssoTickets?: Prisma.SsoTicketCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccessesInput = {
@@ -640,6 +662,7 @@ export type UserUncheckedCreateWithoutAccessesInput = {
   updatedAt?: Date | string
   linkedAccesses?: Prisma.UserSystemAccessUncheckedCreateNestedManyWithoutLinkedByUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
+  ssoTickets?: Prisma.SsoTicketUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccessesInput = {
@@ -662,6 +685,7 @@ export type UserCreateWithoutLinkedAccessesInput = {
   updatedAt?: Date | string
   accesses?: Prisma.UserSystemAccessCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
+  ssoTickets?: Prisma.SsoTicketCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLinkedAccessesInput = {
@@ -679,6 +703,7 @@ export type UserUncheckedCreateWithoutLinkedAccessesInput = {
   updatedAt?: Date | string
   accesses?: Prisma.UserSystemAccessUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
+  ssoTickets?: Prisma.SsoTicketUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLinkedAccessesInput = {
@@ -712,6 +737,7 @@ export type UserUpdateWithoutAccessesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   linkedAccesses?: Prisma.UserSystemAccessUpdateManyWithoutLinkedByUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
+  ssoTickets?: Prisma.SsoTicketUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccessesInput = {
@@ -729,6 +755,7 @@ export type UserUncheckedUpdateWithoutAccessesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   linkedAccesses?: Prisma.UserSystemAccessUncheckedUpdateManyWithoutLinkedByUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
+  ssoTickets?: Prisma.SsoTicketUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutLinkedAccessesInput = {
@@ -757,6 +784,7 @@ export type UserUpdateWithoutLinkedAccessesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accesses?: Prisma.UserSystemAccessUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
+  ssoTickets?: Prisma.SsoTicketUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLinkedAccessesInput = {
@@ -774,6 +802,7 @@ export type UserUncheckedUpdateWithoutLinkedAccessesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accesses?: Prisma.UserSystemAccessUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
+  ssoTickets?: Prisma.SsoTicketUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -791,6 +820,7 @@ export type UserCreateWithoutAuditLogsInput = {
   updatedAt?: Date | string
   accesses?: Prisma.UserSystemAccessCreateNestedManyWithoutUserInput
   linkedAccesses?: Prisma.UserSystemAccessCreateNestedManyWithoutLinkedByUserInput
+  ssoTickets?: Prisma.SsoTicketCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -808,6 +838,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   updatedAt?: Date | string
   accesses?: Prisma.UserSystemAccessUncheckedCreateNestedManyWithoutUserInput
   linkedAccesses?: Prisma.UserSystemAccessUncheckedCreateNestedManyWithoutLinkedByUserInput
+  ssoTickets?: Prisma.SsoTicketUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -841,6 +872,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accesses?: Prisma.UserSystemAccessUpdateManyWithoutUserNestedInput
   linkedAccesses?: Prisma.UserSystemAccessUpdateManyWithoutLinkedByUserNestedInput
+  ssoTickets?: Prisma.SsoTicketUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -858,6 +890,95 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accesses?: Prisma.UserSystemAccessUncheckedUpdateManyWithoutUserNestedInput
   linkedAccesses?: Prisma.UserSystemAccessUncheckedUpdateManyWithoutLinkedByUserNestedInput
+  ssoTickets?: Prisma.SsoTicketUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutSsoTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  jobTitle?: string | null
+  department?: string | null
+  avatarUrl?: string | null
+  status?: $Enums.UserStatus
+  hubRole?: $Enums.HubRole
+  sessionVersion?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accesses?: Prisma.UserSystemAccessCreateNestedManyWithoutUserInput
+  linkedAccesses?: Prisma.UserSystemAccessCreateNestedManyWithoutLinkedByUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutSsoTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  jobTitle?: string | null
+  department?: string | null
+  avatarUrl?: string | null
+  status?: $Enums.UserStatus
+  hubRole?: $Enums.HubRole
+  sessionVersion?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accesses?: Prisma.UserSystemAccessUncheckedCreateNestedManyWithoutUserInput
+  linkedAccesses?: Prisma.UserSystemAccessUncheckedCreateNestedManyWithoutLinkedByUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutSsoTicketsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSsoTicketsInput, Prisma.UserUncheckedCreateWithoutSsoTicketsInput>
+}
+
+export type UserUpsertWithoutSsoTicketsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSsoTicketsInput, Prisma.UserUncheckedUpdateWithoutSsoTicketsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSsoTicketsInput, Prisma.UserUncheckedCreateWithoutSsoTicketsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSsoTicketsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSsoTicketsInput, Prisma.UserUncheckedUpdateWithoutSsoTicketsInput>
+}
+
+export type UserUpdateWithoutSsoTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  hubRole?: Prisma.EnumHubRoleFieldUpdateOperationsInput | $Enums.HubRole
+  sessionVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accesses?: Prisma.UserSystemAccessUpdateManyWithoutUserNestedInput
+  linkedAccesses?: Prisma.UserSystemAccessUpdateManyWithoutLinkedByUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSsoTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  hubRole?: Prisma.EnumHubRoleFieldUpdateOperationsInput | $Enums.HubRole
+  sessionVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accesses?: Prisma.UserSystemAccessUncheckedUpdateManyWithoutUserNestedInput
+  linkedAccesses?: Prisma.UserSystemAccessUncheckedUpdateManyWithoutLinkedByUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -869,12 +990,14 @@ export type UserCountOutputType = {
   accesses: number
   linkedAccesses: number
   auditLogs: number
+  ssoTickets: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accesses?: boolean | UserCountOutputTypeCountAccessesArgs
   linkedAccesses?: boolean | UserCountOutputTypeCountLinkedAccessesArgs
   auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
+  ssoTickets?: boolean | UserCountOutputTypeCountSsoTicketsArgs
 }
 
 /**
@@ -908,6 +1031,13 @@ export type UserCountOutputTypeCountAuditLogsArgs<ExtArgs extends runtime.Types.
   where?: Prisma.AuditLogWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountSsoTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SsoTicketWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -925,6 +1055,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   accesses?: boolean | Prisma.User$accessesArgs<ExtArgs>
   linkedAccesses?: boolean | Prisma.User$linkedAccessesArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
+  ssoTickets?: boolean | Prisma.User$ssoTicketsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -978,6 +1109,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   accesses?: boolean | Prisma.User$accessesArgs<ExtArgs>
   linkedAccesses?: boolean | Prisma.User$linkedAccessesArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
+  ssoTickets?: boolean | Prisma.User$ssoTicketsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -989,6 +1121,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     accesses: Prisma.$UserSystemAccessPayload<ExtArgs>[]
     linkedAccesses: Prisma.$UserSystemAccessPayload<ExtArgs>[]
     auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
+    ssoTickets: Prisma.$SsoTicketPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1400,6 +1533,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   accesses<T extends Prisma.User$accessesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$accessesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserSystemAccessPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   linkedAccesses<T extends Prisma.User$linkedAccessesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$linkedAccessesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserSystemAccessPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditLogs<T extends Prisma.User$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  ssoTickets<T extends Prisma.User$ssoTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ssoTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SsoTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1903,6 +2037,30 @@ export type User$auditLogsArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.AuditLogScalarFieldEnum | Prisma.AuditLogScalarFieldEnum[]
+}
+
+/**
+ * User.ssoTickets
+ */
+export type User$ssoTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SsoTicket
+   */
+  select?: Prisma.SsoTicketSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SsoTicket
+   */
+  omit?: Prisma.SsoTicketOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SsoTicketInclude<ExtArgs> | null
+  where?: Prisma.SsoTicketWhereInput
+  orderBy?: Prisma.SsoTicketOrderByWithRelationInput | Prisma.SsoTicketOrderByWithRelationInput[]
+  cursor?: Prisma.SsoTicketWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SsoTicketScalarFieldEnum | Prisma.SsoTicketScalarFieldEnum[]
 }
 
 /**

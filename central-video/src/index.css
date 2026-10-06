@@ -1,0 +1,244 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Elegant Monochrome Theme - Professional & Minimal */
+
+@layer base {
+  :root {
+    /* Light theme - Clean & Professional */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    /* Cards - subtle elevation */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    /* Primary - Pure black */
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 98%;
+
+    /* Secondary - Soft gray */
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 0%;
+
+    /* Muted - Elegant gray */
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 20%;
+
+    /* Accent - Warm dark */
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
+
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders - Subtle */
+    --border: 0 0% 88%;
+    --input: 0 0% 92%;
+    --ring: 0 0% 0%;
+
+    --radius: 0px;
+
+    /* Status colors - Monochrome variants */
+    --status-new: 0 0% 20%;
+    --status-progress: 0 0% 40%;
+    --status-alteration: 0 0% 55%;
+    --status-review: 0 0% 35%;
+    --status-rejected: 0 72% 51%;
+    --status-completed: 0 0% 0%;
+
+    --sidebar-background: 0 0% 96%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 0 0% 0%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 80%;
+    --sidebar-ring: 0 0% 0%;
+  }
+
+  .dark {
+    /* Pure dark background with subtle warmth */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+
+    /* Cards - subtle elevation */
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Primary - Pure white */
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 4%;
+
+    /* Secondary - Soft gray */
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 98%;
+
+    /* Muted - Elegant gray */
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 55%;
+
+    /* Accent - Warm white */
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 4%;
+
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders - Subtle */
+    --border: 0 0% 18%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 100%;
+
+    --radius: 0px;
+
+    /* Status colors - Monochrome variants */
+    --status-new: 0 0% 85%;
+    --status-progress: 0 0% 60%;
+    --status-alteration: 0 0% 45%;
+    --status-review: 0 0% 70%;
+    --status-rejected: 0 72% 51%;
+    --status-completed: 0 0% 100%;
+
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 90%;
+    --sidebar-accent-foreground: 0 0% 4%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  /* Elegant shadow */
+  .elegant-shadow {
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .elegant-shadow-lg {
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Subtle border glow */
+  .border-glow {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  /* Status badges - Elegant monochrome */
+  .status-new {
+    background-color: hsl(0 0% 85%);
+    color: hsl(0 0% 4%);
+  }
+
+  .status-progress {
+    background-color: hsl(0 0% 30%);
+    color: hsl(0 0% 100%);
+  }
+
+  .status-alteration {
+    background-color: hsl(0 0% 45%);
+    color: hsl(0 0% 100%);
+  }
+
+  .status-rejected {
+    background-color: hsl(0 72% 51%);
+    color: hsl(0 0% 100%);
+  }
+
+  .status-completed {
+    background-color: hsl(0 0% 100%);
+    color: hsl(0 0% 4%);
+  }
+
+  .status-review {
+    background-color: hsl(0 0% 60%);
+    color: hsl(0 0% 4%);
+  }
+
+  /* Card hover effect - Elegant */
+  .mission-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mission-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Text styles */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 70%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Elegant divider */
+  .elegant-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  }
+
+  /* Step indicator */
+  .step-active {
+    background-color: hsl(0 0% 100%);
+    color: hsl(0 0% 4%);
+  }
+
+  .step-inactive {
+    background-color: hsl(0 0% 15%);
+    color: hsl(0 0% 50%);
+  }
+
+  .step-completed {
+    background-color: hsl(0 0% 100%);
+    color: hsl(0 0% 4%);
+  }
+
+  /* Form inputs - Elegant underline style */
+  .elegant-input {
+    @apply bg-transparent border-0 border-b-2 border-border rounded-none px-0 py-4 text-lg;
+    @apply focus:border-foreground focus:ring-0 focus:outline-none;
+    @apply placeholder:text-muted-foreground/50;
+    transition: border-color 0.3s ease;
+  }
+
+  .elegant-input:focus {
+    border-color: hsl(0 0% 100%);
+  }
+
+  /* Button styles */
+  .btn-elegant {
+    @apply relative overflow-hidden;
+    @apply before:absolute before:inset-0 before:bg-white before:opacity-0;
+    @apply before:transition-opacity before:duration-300;
+    @apply hover:before:opacity-10;
+  }
+}

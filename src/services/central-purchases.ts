@@ -54,6 +54,13 @@ type CentralConfig = {
   encryptionKey: Buffer;
 };
 
+type PurchaseApiConfig = {
+  apiUrl: string;
+  origin: string;
+  hubProvisionKey: string;
+  encryptionKey: Buffer;
+};
+
 type MakerWalletConfig = {
   apiUrl: string;
   origin: string;
@@ -67,8 +74,22 @@ function configuredValue(name: string) {
   return value || null;
 }
 
-function getCentralConfig(): CentralConfig | null {
-  return getIntegrationConfig("CENTRAL_PURCHASES");
+function getCentralConfig(): PurchaseApiConfig | null {
+  const apiUrl = configuredValue("CENTRAL_PURCHASES_API_URL");
+  const origin = configuredValue("CENTRAL_PURCHASES_ORIGIN");
+  const hubProvisionKey = configuredValue("CENTRAL_PURCHASES_HUB_PROVISION_KEY");
+  const encryptionSecret = configuredValue("HUB_SSO_ENCRYPTION_KEY");
+  if (!apiUrl || !origin || !hubProvisionKey || !encryptionSecret) return null;
+  try {
+    return {
+      apiUrl: new URL(apiUrl).origin,
+      origin: new URL(origin).origin,
+      hubProvisionKey,
+      encryptionKey: createHash("sha256").update(encryptionSecret).digest(),
+    };
+  } catch {
+    return null;
+  }
 }
 
 function getMarketingConfig(): CentralConfig | null {
@@ -144,10 +165,25 @@ function readIdentity(value: unknown, fallbackEmail: string): CentralIdentity | 
 
 export async function signInToCentralPurchases(
   email: string,
-  password: string,
+  _password: string,
 ): Promise<CentralIdentity | null> {
   const config = getCentralConfig();
-  return signInWithConfig(config, email, password);
+  if (!config) return null;
+  try {
+    const response = await fetch(`${config.apiUrl}/api/auth/hub-provision`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-hub-provision-key": config.hubProvisionKey,
+      },
+      body: JSON.stringify({ email, name: email.split("@")[0] || email }),
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return readIdentity(await response.json(), email);
+  } catch {
+    return null;
+  }
 }
 
 export async function signInToCentralMarketing(
@@ -257,8 +293,10 @@ export async function provisionSystemAccount(
   let identity: (CentralIdentity | MakerWalletIdentity | CentralVideoIdentity) | null = null;
 
   if (slug === CENTRAL_SYSTEM_SLUG || slug === MARKETING_SYSTEM_SLUG) {
-    const config = slug === CENTRAL_SYSTEM_SLUG ? getCentralConfig() : getMarketingConfig();
-    identity = await signUpToSupabase(config, account, secret);
+    identity =
+      slug === CENTRAL_SYSTEM_SLUG
+        ? await signInToCentralPurchases(account.email, secret)
+        : await signUpToSupabase(getMarketingConfig(), account, secret);
   } else if (slug === WALLET_SYSTEM_SLUG) {
     const config = getMakerWalletConfig();
     const invite = configuredValue("MAKER_WALLET_REGISTRATION_INVITE_CODE");
@@ -604,8 +642,8 @@ export async function provisionCentralPurchasesUser(identity: CentralIdentity) {
           externalUserId: identity.subject,
           externalUserEmail: identity.email,
           externalDisplayName: identity.name,
-          externalProvider: "supabase",
-          externalIssuer: getCentralConfig()?.supabaseUrl,
+          externalProvider: CENTRAL_SYSTEM_SLUG,
+          externalIssuer: getCentralConfig()?.apiUrl,
           externalSubject: identity.subject,
         },
       });
@@ -619,8 +657,8 @@ export async function provisionCentralPurchasesUser(identity: CentralIdentity) {
           externalUserId: identity.subject,
           externalUserEmail: identity.email,
           externalDisplayName: identity.name,
-          externalProvider: "supabase",
-          externalIssuer: getCentralConfig()?.supabaseUrl,
+          externalProvider: CENTRAL_SYSTEM_SLUG,
+          externalIssuer: getCentralConfig()?.apiUrl,
           externalSubject: identity.subject,
           linkedAt: new Date(),
         },
@@ -736,7 +774,11 @@ async function createSsoUrl(
   userId: string,
   systemUrl: string,
   session: SsoSession,
-  config: Pick<CentralConfig, "origin" | "encryptionKey"> | MakerWalletConfig | null,
+  config:
+    | Pick<CentralConfig, "origin" | "encryptionKey">
+    | Pick<PurchaseApiConfig, "origin" | "encryptionKey">
+    | MakerWalletConfig
+    | null,
   callbackPath = "/auth/sso",
 ) {
   if (!config || new URL(systemUrl).origin !== config.origin) return null;

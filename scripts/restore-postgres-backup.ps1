@@ -5,7 +5,9 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$BackupPath,
 
-  [int]$TunnelPort = 0
+  [int]$TunnelPort = 0,
+
+  [switch]$ContinueOnRestoreErrors
 )
 
 $ErrorActionPreference = 'Stop'
@@ -50,8 +52,22 @@ if (-not (Test-Path -LiteralPath $pgRestore -PathType Leaf)) {
 
 $env:PGPASSWORD = $password
 $env:PGSSLMODE = 'prefer'
-& $pgRestore --host '127.0.0.1' --port $TunnelPort --username $user --dbname $database --clean --if-exists --no-owner --no-privileges $backup
-if ($LASTEXITCODE -ne 0) {
+$previousErrorActionPreference = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+$restoreOutput = & $pgRestore --host '127.0.0.1' --port $TunnelPort --username $user --dbname $database --clean --if-exists --no-owner --no-privileges $backup 2>&1
+$restoreExitCode = $LASTEXITCODE
+$ErrorActionPreference = $previousErrorActionPreference
+
+$restoreOutput |
+  Where-Object { $_.ToString() -match '(?i)(error|warning|fatal)' } |
+  ForEach-Object { Write-Output $_ }
+
+if ($restoreExitCode -ne 0) {
+  if ($ContinueOnRestoreErrors) {
+    Write-Warning 'A restauração concluiu com avisos de objetos Supabase não disponíveis neste PostgreSQL. Os dados compatíveis foram importados.'
+    exit 0
+  }
+
   throw "A restauração do backup falhou para $RailwayService."
 }
 

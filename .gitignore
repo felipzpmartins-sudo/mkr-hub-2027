@@ -24,3 +24,6 @@ central-compras-schema-diagnostico.sql
 .local/
 test-results/
 tsconfig.tsbuildinfo
+
+# Database archives kept locally for recovery only
+backups/

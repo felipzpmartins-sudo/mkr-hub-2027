@@ -41,6 +41,13 @@ if ($LASTEXITCODE -ne 0) { throw "Não foi possível inspecionar $RailwayService
 $counts = @'
 SELECT 'auth.users=' || count(*) FROM auth.users;
 SELECT 'public.profiles=' || count(*) FROM public.profiles;
+SELECT 'public.solicitations=' || count(*) FROM public.solicitations;
+SELECT 'public.approvals=' || count(*) FROM public.approvals;
+SELECT 'public.quotes=' || count(*) FROM public.quotes;
+SELECT 'public.attachments=' || count(*) FROM public.attachments;
+SELECT 'public.solicitation_messages=' || count(*) FROM public.solicitation_messages;
+SELECT 'public.receipts=' || count(*) FROM public.receipts;
+SELECT 'public.status_history=' || count(*) FROM public.status_history;
 '@
 & $psql --host '127.0.0.1' --port $TunnelPort --username $user --dbname $database --tuples-only --no-align --command $counts
 if ($LASTEXITCODE -ne 0) { throw "Não foi possível contar os registros de $RailwayService." }

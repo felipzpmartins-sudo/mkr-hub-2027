@@ -66,6 +66,42 @@ $checks += Invoke-HttpCheck -Name 'auth_user' -Method Get -Uri "$CentralUrl/auth
 $checks += Invoke-HttpCheck -Name 'auth_refresh' -Method Post -Uri "$CentralUrl/auth/v1/token?grant_type=refresh_token" -Body @{ refresh_token = $session.refresh_token }
 $checks += Invoke-HttpCheck -Name 'hub_directory_users' -Method Get -Uri "$CentralUrl/api/admin/users" -Headers @{ 'x-hub-provision-key' = $hubProvisionKey }
 
+$temporaryUser = $null
+$temporaryEmail = "auditoria-contas-$([guid]::NewGuid())@example.invalid"
+$temporaryPassword = "Audit-$([guid]::NewGuid())!"
+try {
+  $temporaryUserSession = Invoke-RestMethod -Method Post -Uri "$CentralUrl/api/auth/hub-provision" -ContentType 'application/json' -Headers @{
+    'x-hub-provision-key' = $hubProvisionKey
+  } -Body (@{ email = $temporaryEmail; name = 'Auditoria de Contas' } | ConvertTo-Json)
+  $temporaryUser = $temporaryUserSession.user.id
+
+  $checks += Invoke-HttpCheck -Name 'user_management_deactivate' -Method Post -Uri "$CentralUrl/api/admin/users/manage" -Headers @{
+    'x-hub-provision-key' = $hubProvisionKey
+  } -Body @{ action = 'set_active'; user_id = $temporaryUser; active = $false }
+  $checks += Invoke-HttpCheck -Name 'disabled_hub_login' -Method Post -Uri "$CentralUrl/api/auth/hub-provision" -Headers @{
+    'x-hub-provision-key' = $hubProvisionKey
+  } -Body @{ email = $temporaryEmail; name = 'Auditoria de Contas' } -ExpectedStatus @(403)
+  $checks += Invoke-HttpCheck -Name 'user_management_activate' -Method Post -Uri "$CentralUrl/api/admin/users/manage" -Headers @{
+    'x-hub-provision-key' = $hubProvisionKey
+  } -Body @{ action = 'set_active'; user_id = $temporaryUser; active = $true }
+  $checks += Invoke-HttpCheck -Name 'user_management_password' -Method Post -Uri "$CentralUrl/api/admin/users/manage" -Headers @{
+    'x-hub-provision-key' = $hubProvisionKey
+  } -Body @{ action = 'reset_password'; user_id = $temporaryUser; new_password = $temporaryPassword }
+  $checks += Invoke-HttpCheck -Name 'reset_password_login' -Method Post -Uri "$CentralUrl/auth/v1/token?grant_type=password" -Body @{
+    email = $temporaryEmail
+    password = $temporaryPassword
+  }
+} catch {
+  $checks += [pscustomobject]@{ check = 'user_management_roundtrip'; status = 0; ok = $false }
+} finally {
+  if ($temporaryUser) {
+    $checks += Invoke-HttpCheck -Name 'user_management_cleanup' -Method Post -Uri "$CentralUrl/functions/v1/admin-user-management" -Headers $authHeaders -Body @{
+      action = 'delete_user'
+      user_id = $temporaryUser
+    }
+  }
+}
+
 $tables = @(
   'profiles', 'user_roles', 'solicitations', 'quotes', 'attachments',
   'approvals', 'status_history', 'approvers', 'approver_questions',

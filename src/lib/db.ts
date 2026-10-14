@@ -16,9 +16,8 @@ if (process.env.NODE_ENV !== "production") globalDb.prisma = db;
 let ssoColumnReady: Promise<void> | undefined;
 
 /**
- * Supports databases created before the SSO secret field was introduced.
- * This is an idempotent, additive migration and deliberately preserves all
- * existing rows.
+ * Supports databases created before the SSO secret field was introduced and
+ * keeps the production catalog aligned with the systems approved for the HUB.
  */
 export function ensureHubSchema() {
   ssoColumnReady ??= (async () => {
@@ -58,6 +57,17 @@ export function ensureHubSchema() {
             }),
           ),
       );
+
+      const makerCar = await db.system.findUnique({
+        where: { slug: "maker-car" },
+        select: { id: true },
+      });
+      if (makerCar) {
+        await db.$transaction([
+          db.userSystemAccess.deleteMany({ where: { systemId: makerCar.id } }),
+          db.system.delete({ where: { id: makerCar.id } }),
+        ]);
+      }
     })();
   return ssoColumnReady;
 }

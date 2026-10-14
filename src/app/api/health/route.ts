@@ -1,7 +1,8 @@
-import { db } from "@/lib/db";
+import { db, ensureHubSchema } from "@/lib/db";
 export const dynamic = "force-dynamic";
 export async function GET() {
   try {
+    await ensureHubSchema();
     await db.$queryRaw`SELECT 1`;
     return Response.json({ status: "ok" }, { headers: { "Cache-Control": "no-store" } });
   } catch {

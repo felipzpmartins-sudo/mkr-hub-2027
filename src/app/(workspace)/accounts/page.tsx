@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { redirect } from "next/navigation";
 import { EmptyState, PageHeading } from "@/components/ui";
+import { CentralPurchasesUserActions } from "@/components/central-purchases-user-actions";
 import { canViewAccountDirectory } from "@/lib/account-directory";
 import { db } from "@/lib/db";
 import { requireUser } from "@/services/authorization";
@@ -96,6 +97,8 @@ export default async function AccountsPage() {
                     <th>Cadastro</th>
                     <th>Último acesso</th>
                     <th>Papéis</th>
+                    <th>Situação</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -106,6 +109,12 @@ export default async function AccountsPage() {
                       <td>{formatDate(centralUser.createdAt)}</td>
                       <td>{formatDate(centralUser.lastSignInAt, true)}</td>
                       <td><span className="permission-tag">{displayRoles(centralUser)}</span></td>
+                      <td>
+                        <span className={centralUser.active ? "permission-tag" : "status-tag status-inactive"}>
+                          {centralUser.active ? "Ativo" : "Desativado"}
+                        </span>
+                      </td>
+                      <td><CentralPurchasesUserActions userId={centralUser.id} active={centralUser.active} /></td>
                     </tr>
                   ))}
                 </tbody>

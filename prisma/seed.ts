@@ -19,12 +19,6 @@ const systems = [
     icon: "megaphone",
   },
   {
-    name: "Maker Car",
-    slug: "maker-car",
-    description: "Gestão e reserva de veículos",
-    icon: "car",
-  },
-  {
     name: "Central de Vídeos",
     slug: "central-de-videos",
     description: "Solicitações e acompanhamento de produções de vídeo",
@@ -46,7 +40,7 @@ async function main() {
       create: system,
     });
   console.log(
-    "Cinco sistemas cadastrados. Configure URLs, status e permissões no painel administrativo.",
+    "Quatro sistemas cadastrados. Configure URLs, status e permissões no painel administrativo.",
   );
 }
 main()

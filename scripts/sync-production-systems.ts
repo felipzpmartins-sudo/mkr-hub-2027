@@ -71,7 +71,15 @@ async function main() {
       create: { ...system, status: "ONLINE" },
     });
   }
+  const makerCar = await db.system.findUnique({ where: { slug: "maker-car" }, select: { id: true } });
+  if (makerCar) {
+    await db.$transaction([
+      db.userSystemAccess.deleteMany({ where: { systemId: makerCar.id } }),
+      db.system.delete({ where: { id: makerCar.id } }),
+    ]);
+  }
   console.log(`Sistemas de produção sincronizados: ${systems.map((system) => system.slug).join(", ")}.`);
+  console.log(makerCar ? "Maker Car removido do catálogo." : "Maker Car já não fazia parte do catálogo.");
 }
 
 main()

@@ -214,6 +214,68 @@ h3 {
   background: #2a332b;
   border-color: #596d4e;
 }
+.button-danger {
+  background: #3a2023;
+  color: #ffd5d8;
+  border: 1px solid #6e343a;
+}
+.button-danger:not(:disabled):hover {
+  background: #52282e;
+  border-color: #a54b55;
+}
+.account-actions {
+  display: flex;
+  min-width: 260px;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.account-actions form {
+  margin: 0;
+}
+.account-actions > div[aria-live="polite"] {
+  flex-basis: 100%;
+}
+.account-actions .notice {
+  margin: 2px 0 0;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+.password-reset summary {
+  list-style: none;
+  cursor: pointer;
+}
+.password-reset summary::-webkit-details-marker {
+  display: none;
+}
+.password-reset[open] {
+  flex-basis: 100%;
+}
+.password-reset-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px !important;
+  padding: 12px;
+  border: 1px solid #35412d;
+  border-radius: 10px;
+  background: #121813;
+}
+.password-reset-form label {
+  display: grid;
+  gap: 5px;
+  color: #aebba8;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.password-reset-form input {
+  min-width: 230px;
+  border: 1px solid #3b4838;
+  border-radius: 8px;
+  background: #0d120e;
+  color: #edf4e8;
+  padding: 9px 10px;
+}
 .button-small {
   font-size: 12px;
   min-height: 35px;

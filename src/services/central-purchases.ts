@@ -76,7 +76,12 @@ export type CentralPurchasesDirectoryUser = {
   createdAt: string | null;
   lastSignInAt: string | null;
   roles: string[];
+  active: boolean;
 };
+
+export type CentralPurchasesUserAction =
+  | { action: "reset_password"; userId: string; password: string }
+  | { action: "set_active"; userId: string; active: boolean };
 
 function configuredValue(name: string) {
   const value = process.env[name]?.trim();
@@ -202,8 +207,35 @@ export async function listCentralPurchasesUsers(): Promise<CentralPurchasesDirec
       createdAt: typeof user.created_at === "string" ? user.created_at : null,
       lastSignInAt: typeof user.last_sign_in_at === "string" ? user.last_sign_in_at : null,
       roles: Array.isArray(user.roles) ? user.roles.filter((role): role is string => typeof role === "string") : [],
+      active: user.active !== false,
     }];
   });
+}
+
+export async function manageCentralPurchasesUser(input: CentralPurchasesUserAction) {
+  const config = getCentralConfig();
+  if (!config) throw new Error("Central de Compras não está configurado no MKR HUB.");
+
+  const body = input.action === "reset_password"
+    ? { action: input.action, user_id: input.userId, new_password: input.password }
+    : { action: input.action, user_id: input.userId, active: input.active };
+  const response = await fetch(`${config.apiUrl}/api/admin/users/manage`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-hub-provision-key": config.hubProvisionKey,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    if (payload?.error === "user_not_found") throw new Error("Usuário não encontrado no Central de Compras.");
+    if (payload?.error === "invalid_password") throw new Error("A nova senha não atende aos requisitos de segurança.");
+    throw new Error(`Não foi possível atualizar o usuário do Central de Compras (${response.status}).`);
+  }
 }
 
 export async function signInToCentralPurchases(

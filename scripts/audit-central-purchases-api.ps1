@@ -92,6 +92,7 @@ try {
     password = $temporaryPassword
   }
 } catch {
+  Write-Warning "Falha no ciclo de gestão de usuários: $($_.Exception.Message)"
   $checks += [pscustomobject]@{ check = 'user_management_roundtrip'; status = 0; ok = $false }
 } finally {
   if ($temporaryUser) {

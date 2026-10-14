@@ -7,7 +7,13 @@ param(
 
   [int]$TunnelPort = 0,
 
-  [switch]$ContinueOnRestoreErrors
+  [switch]$ContinueOnRestoreErrors,
+
+  [string]$LogPath = '',
+
+  [string[]]$Tables = @(),
+
+  [switch]$SkipClean
 )
 
 $ErrorActionPreference = 'Stop'
@@ -52,11 +58,30 @@ if (-not (Test-Path -LiteralPath $pgRestore -PathType Leaf)) {
 
 $env:PGPASSWORD = $password
 $env:PGSSLMODE = 'prefer'
-$previousErrorActionPreference = $ErrorActionPreference
-$ErrorActionPreference = 'Continue'
-$restoreOutput = & $pgRestore --host '127.0.0.1' --port $TunnelPort --username $user --dbname $database --clean --if-exists --no-owner --no-privileges $backup 2>&1
-$restoreExitCode = $LASTEXITCODE
-$ErrorActionPreference = $previousErrorActionPreference
+$processOutput = Join-Path $env:TEMP ("central-compras-restore-$([guid]::NewGuid()).out")
+$processError = Join-Path $env:TEMP ("central-compras-restore-$([guid]::NewGuid()).err")
+try {
+  $restoreArguments = @('--host', '127.0.0.1', '--port', $TunnelPort, '--username', $user, '--dbname', $database, '--no-owner', '--no-privileges')
+  if (-not $SkipClean) { $restoreArguments += @('--clean', '--if-exists') }
+  foreach ($table in $Tables) { $restoreArguments += "--table=$table" }
+  $restoreArguments += $backup
+  $previousErrorActionPreference = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  & $pgRestore @restoreArguments 1> $processOutput 2> $processError
+  $restoreExitCode = $LASTEXITCODE
+  $ErrorActionPreference = $previousErrorActionPreference
+  $restoreOutput = @()
+  if (Test-Path -LiteralPath $processOutput) { $restoreOutput += Get-Content -LiteralPath $processOutput }
+  if (Test-Path -LiteralPath $processError) { $restoreOutput += Get-Content -LiteralPath $processError }
+} finally {
+  Remove-Item -LiteralPath $processOutput, $processError -Force -ErrorAction SilentlyContinue
+}
+
+if ($LogPath) {
+  $logDirectory = Split-Path -Parent $LogPath
+  if ($logDirectory) { New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null }
+  $restoreOutput | ForEach-Object { $_.ToString() } | Set-Content -LiteralPath $LogPath
+}
 
 $restoreOutput |
   Where-Object { $_.ToString() -match '(?i)(error|warning|fatal)' } |

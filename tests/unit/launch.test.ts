@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/services/authorization", () => ({ requireUser: mocks.requireUser, requireAdmin: vi.fn() }));
 vi.mock("@/lib/db", () => ({
+  ensureHubSchema: vi.fn().mockResolvedValue(undefined),
   db: {
     system: { findUnique: mocks.system },
     userSystemAccess: { findUnique: mocks.access, create: mocks.accessCreate, update: mocks.accessUpdate },

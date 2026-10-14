@@ -112,14 +112,14 @@ export function Sidebar({
             <>
               {user.hubRole !== "ADMIN" && <p className="nav-label admin-label">ÁREA PRIVADA</p>}
               <Link
-                href="/admin/accounts"
-                aria-current={pathname === "/admin/accounts" ? "page" : undefined}
-                className={`nav-link ${pathname === "/admin/accounts" ? "active" : ""}`}
+                href="/accounts"
+                aria-current={pathname === "/accounts" ? "page" : undefined}
+                className={`nav-link ${pathname === "/accounts" ? "active" : ""}`}
                 onClick={() => setOpen(false)}
               >
                 <UserRoundCheck size={18} />
                 <span>Contas</span>
-                {pathname === "/admin/accounts" && <span className="nav-dot" />}
+                {pathname === "/accounts" && <span className="nav-dot" />}
               </Link>
             </>
           )}

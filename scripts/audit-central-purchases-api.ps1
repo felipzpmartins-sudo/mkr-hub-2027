@@ -64,6 +64,7 @@ $checks += Invoke-HttpCheck -Name 'health' -Method Get -Uri "$CentralUrl/health"
 $checks += Invoke-HttpCheck -Name 'frontend' -Method Get -Uri "$CentralUrl/"
 $checks += Invoke-HttpCheck -Name 'auth_user' -Method Get -Uri "$CentralUrl/auth/v1/user" -Headers $authHeaders
 $checks += Invoke-HttpCheck -Name 'auth_refresh' -Method Post -Uri "$CentralUrl/auth/v1/token?grant_type=refresh_token" -Body @{ refresh_token = $session.refresh_token }
+$checks += Invoke-HttpCheck -Name 'hub_directory_users' -Method Get -Uri "$CentralUrl/api/admin/users" -Headers @{ 'x-hub-provision-key' = $hubProvisionKey }
 
 $tables = @(
   'profiles', 'user_roles', 'solicitations', 'quotes', 'attachments',

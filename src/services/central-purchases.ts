@@ -69,6 +69,15 @@ type MakerWalletConfig = {
 
 type CentralVideoConfig = MakerWalletConfig;
 
+export type CentralPurchasesDirectoryUser = {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string | null;
+  lastSignInAt: string | null;
+  roles: string[];
+};
+
 function configuredValue(name: string) {
   const value = process.env[name]?.trim();
   return value || null;
@@ -161,6 +170,40 @@ function readIdentity(value: unknown, fallbackEmail: string): CentralIdentity | 
   const name = (metadataName || responseEmail || fallbackEmail).slice(0, 100);
 
   return { subject, email: responseEmail, name, accessToken, refreshToken };
+}
+
+export async function listCentralPurchasesUsers(): Promise<CentralPurchasesDirectoryUser[]> {
+  const config = getCentralConfig();
+  if (!config) throw new Error("Central de Compras não está configurado no MKR HUB.");
+
+  const response = await fetch(`${config.apiUrl}/api/admin/users`, {
+    headers: { "x-hub-provision-key": config.hubProvisionKey },
+    cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Não foi possível consultar os usuários do Central de Compras (${response.status}).`);
+  }
+
+  const payload = (await response.json()) as { users?: unknown };
+  if (!Array.isArray(payload.users)) throw new Error("Resposta inválida do Central de Compras.");
+
+  return payload.users.flatMap((value) => {
+    if (!value || typeof value !== "object") return [];
+    const user = value as Record<string, unknown>;
+    const id = typeof user.id === "string" ? user.id : "";
+    const email = typeof user.email === "string" ? user.email : "";
+    if (!id || !email) return [];
+    return [{
+      id,
+      email,
+      name: typeof user.full_name === "string" && user.full_name.trim() ? user.full_name.trim() : email,
+      createdAt: typeof user.created_at === "string" ? user.created_at : null,
+      lastSignInAt: typeof user.last_sign_in_at === "string" ? user.last_sign_in_at : null,
+      roles: Array.isArray(user.roles) ? user.roles.filter((role): role is string => typeof role === "string") : [],
+    }];
+  });
 }
 
 export async function signInToCentralPurchases(

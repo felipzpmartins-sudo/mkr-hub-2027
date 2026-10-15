@@ -79,9 +79,13 @@ export type CentralPurchasesDirectoryUser = {
   active: boolean;
 };
 
+export type CentralMarketingDirectoryUser = CentralPurchasesDirectoryUser;
+
 export type CentralPurchasesUserAction =
   | { action: "reset_password"; userId: string; password: string }
   | { action: "set_active"; userId: string; active: boolean };
+
+export type CentralMarketingUserAction = CentralPurchasesUserAction;
 
 function configuredValue(name: string) {
   const value = process.env[name]?.trim();
@@ -108,6 +112,24 @@ function getCentralConfig(): PurchaseApiConfig | null {
 
 function getMarketingConfig(): CentralConfig | null {
   return getIntegrationConfig("CENTRAL_MARKETING");
+}
+
+function getMarketingAdminConfig(): PurchaseApiConfig | null {
+  const apiUrl = configuredValue("CENTRAL_MARKETING_SUPABASE_URL");
+  const origin = configuredValue("CENTRAL_MARKETING_ORIGIN");
+  const hubProvisionKey = configuredValue("CENTRAL_MARKETING_HUB_PROVISION_KEY");
+  const encryptionSecret = configuredValue("HUB_SSO_ENCRYPTION_KEY");
+  if (!apiUrl || !origin || !hubProvisionKey || !encryptionSecret) return null;
+  try {
+    return {
+      apiUrl: new URL(apiUrl).origin,
+      origin: new URL(origin).origin,
+      hubProvisionKey,
+      encryptionKey: createHash("sha256").update(encryptionSecret).digest(),
+    };
+  } catch {
+    return null;
+  }
 }
 
 function getMakerWalletConfig(): MakerWalletConfig | null {
@@ -171,7 +193,11 @@ function readIdentity(value: unknown, fallbackEmail: string): CentralIdentity | 
     rawUser.user_metadata && typeof rawUser.user_metadata === "object"
       ? (rawUser.user_metadata as Record<string, unknown>)
       : {};
-  const metadataName = typeof metadata.full_name === "string" ? metadata.full_name.trim() : "";
+  const metadataName = typeof metadata.full_name === "string"
+    ? metadata.full_name.trim()
+    : typeof metadata.name === "string"
+      ? metadata.name.trim()
+      : "";
   const name = (metadataName || responseEmail || fallbackEmail).slice(0, 100);
 
   return { subject, email: responseEmail, name, accessToken, refreshToken };
@@ -238,6 +264,64 @@ export async function manageCentralPurchasesUser(input: CentralPurchasesUserActi
   }
 }
 
+export async function listCentralMarketingUsers(): Promise<CentralMarketingDirectoryUser[]> {
+  const config = getMarketingAdminConfig();
+  if (!config) throw new Error("Central de Marketing não está configurado no MKR HUB.");
+
+  const response = await fetch(`${config.apiUrl}/api/admin/users`, {
+    headers: { "x-hub-provision-key": config.hubProvisionKey },
+    cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) {
+    throw new Error(`Não foi possível consultar os usuários do Central de Marketing (${response.status}).`);
+  }
+  const payload = (await response.json()) as { users?: unknown };
+  if (!Array.isArray(payload.users)) throw new Error("Resposta inválida do Central de Marketing.");
+
+  return payload.users.flatMap((value) => {
+    if (!value || typeof value !== "object") return [];
+    const user = value as Record<string, unknown>;
+    const id = typeof user.id === "string" ? user.id : "";
+    const email = typeof user.email === "string" ? user.email : "";
+    if (!id || !email) return [];
+    const rawName = typeof user.name === "string" ? user.name : typeof user.full_name === "string" ? user.full_name : "";
+    return [{
+      id,
+      email,
+      name: rawName.trim() || email,
+      createdAt: typeof user.created_at === "string" ? user.created_at : null,
+      lastSignInAt: typeof user.last_sign_in_at === "string" ? user.last_sign_in_at : null,
+      roles: Array.isArray(user.roles) ? user.roles.filter((role): role is string => typeof role === "string") : [],
+      active: user.active !== false,
+    }];
+  });
+}
+
+export async function manageCentralMarketingUser(input: CentralMarketingUserAction) {
+  const config = getMarketingAdminConfig();
+  if (!config) throw new Error("Central de Marketing não está configurado no MKR HUB.");
+  const body = input.action === "reset_password"
+    ? { action: input.action, user_id: input.userId, new_password: input.password }
+    : { action: input.action, user_id: input.userId, active: input.active };
+  const response = await fetch(`${config.apiUrl}/api/admin/users/manage`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-hub-provision-key": config.hubProvisionKey,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    if (payload?.error === "user_not_found") throw new Error("Usuário não encontrado no Central de Marketing.");
+    if (payload?.error === "invalid_password") throw new Error("A nova senha não atende aos requisitos de segurança.");
+    throw new Error(`Não foi possível atualizar o usuário do Central de Marketing (${response.status}).`);
+  }
+}
+
 export async function signInToCentralPurchases(
   email: string,
   _password: string,
@@ -263,10 +347,25 @@ export async function signInToCentralPurchases(
 
 export async function signInToCentralMarketing(
   email: string,
-  password: string,
+  _password: string,
 ): Promise<CentralIdentity | null> {
-  const config = getMarketingConfig();
-  return signInWithConfig(config, email, password);
+  const config = getMarketingAdminConfig();
+  if (!config) return null;
+  try {
+    const response = await fetch(`${config.apiUrl}/api/auth/hub-provision`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-hub-provision-key": config.hubProvisionKey,
+      },
+      body: JSON.stringify({ email, name: email.split("@")[0] || email }),
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return readIdentity(await response.json(), email);
+  } catch {
+    return null;
+  }
 }
 
 async function signInWithConfig(
@@ -371,7 +470,7 @@ export async function provisionSystemAccount(
     identity =
       slug === CENTRAL_SYSTEM_SLUG
         ? await signInToCentralPurchases(account.email, secret)
-        : await signUpToSupabase(getMarketingConfig(), account, secret);
+        : await signInToCentralMarketing(account.email, secret);
   } else if (slug === WALLET_SYSTEM_SLUG) {
     const config = getMakerWalletConfig();
     const invite = configuredValue("MAKER_WALLET_REGISTRATION_INVITE_CODE");

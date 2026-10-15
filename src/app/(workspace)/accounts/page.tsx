@@ -3,11 +3,14 @@ import { ArrowUpRight } from "lucide-react";
 import { redirect } from "next/navigation";
 import { EmptyState, PageHeading } from "@/components/ui";
 import { CentralPurchasesUserActions } from "@/components/central-purchases-user-actions";
+import { CentralMarketingUserActions } from "@/components/central-marketing-user-actions";
 import { canViewAccountDirectory } from "@/lib/account-directory";
 import { db } from "@/lib/db";
 import { requireUser } from "@/services/authorization";
 import {
   listCentralPurchasesUsers,
+  listCentralMarketingUsers,
+  type CentralMarketingDirectoryUser,
   type CentralPurchasesDirectoryUser,
 } from "@/services/central-purchases";
 
@@ -45,7 +48,7 @@ export default async function AccountsPage() {
   const user = await requireUser();
   if (!canViewAccountDirectory(user.email)) redirect("/forbidden");
 
-  const [systems, centralResult] = await Promise.all([
+  const [systems, centralResult, marketingResult] = await Promise.all([
     db.system.findMany({
       orderBy: { createdAt: "asc" },
       include: {
@@ -59,6 +62,12 @@ export default async function AccountsPage() {
       .then((users) => ({ users, error: null }))
       .catch((error: unknown) => ({
         users: [] as CentralPurchasesDirectoryUser[],
+        error: error instanceof Error ? error.message : "Não foi possível carregar os usuários.",
+      })),
+    listCentralMarketingUsers()
+      .then((users) => ({ users, error: null }))
+      .catch((error: unknown) => ({
+        users: [] as CentralMarketingDirectoryUser[],
         error: error instanceof Error ? error.message : "Não foi possível carregar os usuários.",
       })),
   ]);
@@ -122,6 +131,57 @@ export default async function AccountsPage() {
             </div>
           ) : (
             <EmptyState title="Nenhum usuário encontrado" description="O banco do Central de Compras não retornou usuários." />
+          )}
+        </section>
+
+        <section className="panel table-panel">
+          <div className="panel-heading">
+            <div>
+              <p className="eyebrow">BANCO DO CENTRAL DE MARKETING</p>
+              <h2>Usuários do Central de Marketing</h2>
+            </div>
+            <span className="count-pill">
+              {marketingResult.users.length} usuário{marketingResult.users.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          {marketingResult.error ? (
+            <EmptyState title="Não foi possível carregar os usuários" description={marketingResult.error} />
+          ) : marketingResult.users.length ? (
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Cadastro</th>
+                    <th>Último acesso</th>
+                    <th>Papéis</th>
+                    <th>Situação</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {marketingResult.users.map((marketingUser) => (
+                    <tr key={marketingUser.id}>
+                      <td><strong>{marketingUser.name}</strong></td>
+                      <td>{marketingUser.email}</td>
+                      <td>{formatDate(marketingUser.createdAt)}</td>
+                      <td>{formatDate(marketingUser.lastSignInAt, true)}</td>
+                      <td><span className="permission-tag">{displayRoles(marketingUser)}</span></td>
+                      <td>
+                        <span className={marketingUser.active ? "permission-tag" : "status-tag status-inactive"}>
+                          {marketingUser.active ? "Ativo" : "Desativado"}
+                        </span>
+                      </td>
+                      <td><CentralMarketingUserActions userId={marketingUser.id} active={marketingUser.active} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState title="Nenhum usuário encontrado" description="O banco do Central de Marketing não retornou usuários." />
           )}
         </section>
 

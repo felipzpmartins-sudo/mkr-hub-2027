@@ -16,6 +16,7 @@ ENV NODE_ENV=production
 COPY --from=build --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/.next ./.next
+COPY --from=build --chown=node:node /app/public ./public
 COPY --from=build --chown=node:node /app/prisma ./prisma
 COPY --from=build --chown=node:node /app/prisma.config.ts /app/tsconfig.json /app/next.config.ts ./
 COPY --from=build --chown=node:node /app/src ./src

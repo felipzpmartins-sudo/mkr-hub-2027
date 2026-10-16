@@ -1,6 +1,9 @@
-import { Activity, Layers3, ShieldCheck, Sparkles } from "lucide-react";
+import type { CSSProperties } from "react";
+import { Activity, ArrowDown, Layers3, Sparkles } from "lucide-react";
 import { requireUser } from "@/services/authorization";
 import { findWorkspaceSystems } from "@/repositories/systems";
+import { Asterisk } from "@/components/asterisk";
+import { Scene } from "@/components/scene";
 import { SystemCard } from "@/components/system-card";
 
 export const metadata = { title: "Dashboard" };
@@ -20,38 +23,50 @@ export default async function DashboardPage({
 
   return (
     <div className="dashboard-page">
-      <section className="dashboard-hero">
-        <div className="dashboard-hero-grid" aria-hidden="true" />
-        <div className="dashboard-hero-content">
+      <section className="dashboard-hero frame">
+        <Scene variant="hero" />
+        <div className="dashboard-hero-top">
           <p className="dashboard-kicker">
             <Sparkles size={13} /> SEU ECOSSISTEMA DE TRABALHO
           </p>
-          <h1>
-            Bem-vindo, {firstName}
-            <span>.</span>
-          </h1>
-          <p>Todos os seus sistemas em um só lugar.</p>
-          <div className="dashboard-hero-metrics">
-            <span>
-              <Layers3 size={14} /> {systems.length} sistemas no HUB
-            </span>
-            <span>
-              <Activity size={14} /> {online} online agora
-            </span>
-          </div>
-        </div>
-        <div className="dashboard-hero-signal" aria-hidden="true">
-          <span className="signal-ring ring-one" />
-          <span className="signal-ring ring-two" />
-          <span className="signal-core">
-            <ShieldCheck size={31} />
+          <span className="status-chip">
+            <span className="live-dot" /> {online} online agora
           </span>
-          <span className="signal-dot dot-one" />
-          <span className="signal-dot dot-two" />
+        </div>
+        <div className="dashboard-hero-body">
+          <h1 className="greeting" style={{ "--chars": firstName.length } as CSSProperties}>
+            <span className="greeting-lead line">
+              <span>Bem-vindo,</span>
+            </span>
+            <span className="greeting-name line">
+              <span>
+                {firstName}
+                <span className="greeting-dot">.</span>
+              </span>
+            </span>
+          </h1>
+          <Asterisk className="greeting-star" />
+          <div className="dashboard-hero-aside">
+            <p>Todos os seus sistemas em um só lugar.</p>
+            <div className="dashboard-hero-metrics">
+              <span>
+                <Layers3 size={14} /> {systems.length} sistemas no HUB
+              </span>
+              <span>
+                <Activity size={14} /> {online} online agora
+              </span>
+            </div>
+            <a href="#sistemas" className="pill-cta">
+              Ver meus sistemas
+              <span className="pill-cta-icon">
+                <ArrowDown size={16} />
+              </span>
+            </a>
+          </div>
         </div>
       </section>
 
-      <div className="dashboard-section-heading">
+      <div className="dashboard-section-heading" id="sistemas">
         <div>
           <p className="eyebrow">SISTEMAS DO HUB</p>
           <h2>Seu painel de acesso</h2>

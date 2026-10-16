@@ -57,7 +57,7 @@ export function SystemCard({ system, access }: { system: CardSystem; access: Car
       EDITOR: "Editor",
     }[access?.role ?? ""] || access?.role;
   return (
-    <article className="system-card">
+    <article className="system-card" data-spotlight="">
       <div className="system-card-top">
         <SystemIcon icon={system.icon} />
         <Badge value={system.status} />

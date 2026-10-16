@@ -46,9 +46,10 @@ type CardAccess = {
 };
 export function SystemCard({ system, access }: { system: CardSystem; access: CardAccess | null }) {
   const available = system.status === "ONLINE" && !!system.url;
-  const connected = !!access && access.enabled && access.status === "ACTIVE" && !!access.externalSubject;
+  const connected =
+    !!access && access.enabled && access.status === "ACTIVE" && !!access.externalSubject;
   const requiresApproval = system.slug === "maker-wallet";
-  const pendingApproval = requiresApproval && !!access && !connected;
+  const pendingApproval = requiresApproval && !!access && access.status === "ACTIVE" && !connected;
   const roleLabel =
     {
       ADMIN: "Administrador",
@@ -64,14 +65,28 @@ export function SystemCard({ system, access }: { system: CardSystem; access: Car
       <h3>{system.name}</h3>
       <p className="system-description">{system.description}</p>
       {connected ? (
-        <div className="system-role"><LockKeyhole size={12} /><span>Acesso:</span><strong>{roleLabel}</strong></div>
+        <div className="system-role">
+          <LockKeyhole size={12} />
+          <span>Acesso:</span>
+          <strong>{roleLabel}</strong>
+        </div>
       ) : requiresApproval ? (
-        <div className="system-role"><UserPlus size={12} /><span>Conta:</span><strong>{pendingApproval ? "Solicitação em análise" : "Autorização necessária"}</strong></div>
+        <div className="system-role">
+          <UserPlus size={12} />
+          <span>Conta:</span>
+          <strong>{pendingApproval ? "Solicitação em análise" : "Autorização necessária"}</strong>
+        </div>
       ) : (
-        <div className="system-role"><UserPlus size={12} /><span>Conta:</span><strong>O MKR HUB cria seu acesso</strong></div>
+        <div className="system-role">
+          <UserPlus size={12} />
+          <span>Conta:</span>
+          <strong>O MKR HUB cria seu acesso</strong>
+        </div>
       )}
       <form action={requiresApproval && !connected ? requestMakerWalletAccess : launchSystem}>
-        {!requiresApproval || connected ? <input type="hidden" name="systemId" value={system.id} /> : null}
+        {!requiresApproval || connected ? (
+          <input type="hidden" name="systemId" value={system.id} />
+        ) : null}
         <LaunchButton
           disabled={!available || pendingApproval}
           label={

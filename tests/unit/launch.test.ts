@@ -13,12 +13,19 @@ const mocks = vi.hoisted(() => ({
   restore: vi.fn(),
 }));
 
-vi.mock("@/services/authorization", () => ({ requireUser: mocks.requireUser, requireAdmin: vi.fn() }));
+vi.mock("@/services/authorization", () => ({
+  requireUser: mocks.requireUser,
+  requireAdmin: vi.fn(),
+}));
 vi.mock("@/lib/db", () => ({
   ensureHubSchema: vi.fn().mockResolvedValue(undefined),
   db: {
     system: { findUnique: mocks.system },
-    userSystemAccess: { findUnique: mocks.access, create: mocks.accessCreate, update: mocks.accessUpdate },
+    userSystemAccess: {
+      findUnique: mocks.access,
+      create: mocks.accessCreate,
+      update: mocks.accessUpdate,
+    },
     auditLog: { create: mocks.audit },
   },
 }));
@@ -32,7 +39,11 @@ vi.mock("@/services/central-purchases", () => ({
   signInWithStoredSystemSecret: mocks.restore,
 }));
 vi.mock("@/lib/request", () => ({ requestIp: async () => null }));
-vi.mock("next/navigation", () => ({ redirect: (path: string) => { throw new Error(`REDIRECT:${path}`); } }));
+vi.mock("next/navigation", () => ({
+  redirect: (path: string) => {
+    throw new Error(`REDIRECT:${path}`);
+  },
+}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { launchSystem } from "@/app/actions/systems";
@@ -49,13 +60,29 @@ describe("system catalog launch", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireUser.mockResolvedValue({ id: "authenticated-user", name: "Pessoa Teste", email: "pessoa@example.com" });
+    mocks.requireUser.mockResolvedValue({
+      id: "authenticated-user",
+      name: "Pessoa Teste",
+      email: "pessoa@example.com",
+    });
     mocks.audit.mockResolvedValue({});
     mocks.auth.mockResolvedValue(null);
     mocks.system.mockResolvedValue(onlineSystem);
     mocks.access.mockResolvedValue(null);
-    mocks.accessCreate.mockResolvedValue({ id: "new-access", enabled: true, status: "ACTIVE", externalSubject: "video-user", role: "USER" });
-    mocks.accessUpdate.mockResolvedValue({ id: "existing-access", enabled: true, status: "ACTIVE", externalSubject: "video-user", role: "USER" });
+    mocks.accessCreate.mockResolvedValue({
+      id: "new-access",
+      enabled: true,
+      status: "ACTIVE",
+      externalSubject: "video-user",
+      role: "USER",
+    });
+    mocks.accessUpdate.mockResolvedValue({
+      id: "existing-access",
+      enabled: true,
+      status: "ACTIVE",
+      externalSubject: "video-user",
+      role: "USER",
+    });
     mocks.provision.mockResolvedValue({
       identity: { subject: "video-user", name: "Pessoa Teste", email: "pessoa@example.com" },
       session: { accessToken: "video-token" },
@@ -76,9 +103,13 @@ describe("system catalog launch", () => {
   });
 
   it("creates a system account without asking for another login and opens it by SSO", async () => {
-    await expect(launchSystem(form)).rejects.toThrow("REDIRECT:https://video.example.com/sso?ticket=opaque");
+    await expect(launchSystem(form)).rejects.toThrow(
+      "REDIRECT:https://video.example.com/sso?ticket=opaque",
+    );
     expect(mocks.provision).toHaveBeenCalledWith("central-de-videos", {
-      id: "authenticated-user", name: "Pessoa Teste", email: "pessoa@example.com",
+      id: "authenticated-user",
+      name: "Pessoa Teste",
+      email: "pessoa@example.com",
     });
     expect(mocks.audit).toHaveBeenLastCalledWith({
       data: {
@@ -97,17 +128,74 @@ describe("system catalog launch", () => {
   });
 
   it("uses a one-time SSO handoff for a connected Central de Compras account", async () => {
-    mocks.auth.mockResolvedValue({ user: { centralPurchasesSession: { accessToken: "access", refreshToken: "refresh" } } });
-    mocks.system.mockResolvedValue({ ...onlineSystem, id: "central", slug: "central-de-compras", url: "https://central.example.com" });
-    mocks.access.mockResolvedValue({ enabled: true, status: "ACTIVE", externalSubject: "external-user", role: "USER" });
+    mocks.auth.mockResolvedValue({
+      user: { centralPurchasesSession: { accessToken: "access", refreshToken: "refresh" } },
+    });
+    mocks.system.mockResolvedValue({
+      ...onlineSystem,
+      id: "central",
+      slug: "central-de-compras",
+      url: "https://central.example.com",
+    });
+    mocks.access.mockResolvedValue({
+      enabled: true,
+      status: "ACTIVE",
+      externalSubject: "external-user",
+      role: "USER",
+    });
     mocks.createSsoUrl.mockResolvedValue("https://central.example.com/auth/sso?ticket=opaque");
-    await expect(launchSystem(form)).rejects.toThrow("REDIRECT:https://central.example.com/auth/sso?ticket=opaque");
-    expect(mocks.createSsoUrl).toHaveBeenCalledWith("authenticated-user", "https://central.example.com", { accessToken: "access", refreshToken: "refresh" });
+    await expect(launchSystem(form)).rejects.toThrow(
+      "REDIRECT:https://central.example.com/auth/sso?ticket=opaque",
+    );
+    expect(mocks.createSsoUrl).toHaveBeenCalledWith(
+      "authenticated-user",
+      "https://central.example.com",
+      { accessToken: "access", refreshToken: "refresh" },
+    );
   });
 
   it("keeps an existing Central de Vídeos account connected without asking for its old password", async () => {
-    mocks.access.mockResolvedValue({ enabled: true, status: "ACTIVE", externalSubject: "external-user", role: "USER" });
-    await expect(launchSystem(form)).rejects.toThrow("REDIRECT:https://video.example.com/sso?ticket=opaque");
+    mocks.access.mockResolvedValue({
+      enabled: true,
+      status: "ACTIVE",
+      externalSubject: "external-user",
+      role: "USER",
+    });
+    await expect(launchSystem(form)).rejects.toThrow(
+      "REDIRECT:https://video.example.com/sso?ticket=opaque",
+    );
     expect(mocks.accessUpdate).toHaveBeenCalled();
+  });
+
+  it("renews an approved Maker Wallet SSO session without asking for another password", async () => {
+    mocks.system.mockResolvedValue({
+      ...onlineSystem,
+      slug: "maker-wallet",
+      url: "https://wallet.example.com",
+    });
+    mocks.access.mockResolvedValue({
+      id: "wallet-access",
+      enabled: true,
+      status: "ACTIVE",
+      externalSubject: "wallet-user",
+      role: "ADMIN",
+    });
+    mocks.accessUpdate.mockResolvedValue({
+      id: "wallet-access",
+      enabled: true,
+      status: "ACTIVE",
+      externalSubject: "wallet-user",
+      role: "ADMIN",
+    });
+    mocks.createSsoUrl.mockResolvedValue("https://wallet.example.com/sso?ticket=opaque");
+
+    await expect(launchSystem(form)).rejects.toThrow(
+      "REDIRECT:https://wallet.example.com/sso?ticket=opaque",
+    );
+    expect(mocks.provision).toHaveBeenCalledWith(
+      "maker-wallet",
+      { id: "authenticated-user", name: "Pessoa Teste", email: "pessoa@example.com" },
+      "ADMIN",
+    );
   });
 });

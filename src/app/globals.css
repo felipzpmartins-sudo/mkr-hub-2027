@@ -233,6 +233,22 @@ h3 {
 .account-actions form {
   margin: 0;
 }
+.wallet-approval-actions form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.compact-select select {
+  min-height: 35px;
+  padding: 7px 30px 7px 10px;
+  border: 1px solid #3b4838;
+  border-radius: 8px;
+  background: #0d120e;
+  color: #edf4e8;
+}
+.wallet-requests-panel {
+  margin-bottom: 24px;
+}
 .account-actions > div[aria-live="polite"] {
   flex-basis: 100%;
 }
@@ -2553,8 +2569,7 @@ td strong {
   background:
     radial-gradient(circle at 12% 90%, #bad7df3d 0, #5d737c1c 14%, transparent 34%),
     radial-gradient(circle at 84% 8%, #b8d2d53d 0, #50636b1f 17%, transparent 38%),
-    radial-gradient(circle at 49% 58%, #28303a13 0, transparent 36%),
-    #050607;
+    radial-gradient(circle at 49% 58%, #28303a13 0, transparent 36%), #050607;
 }
 .login-ambient::before {
   content: "";
@@ -2565,8 +2580,14 @@ td strong {
     radial-gradient(#f8ffff 0.65px, transparent 0.9px),
     radial-gradient(#b9cbd1 0.55px, transparent 0.8px),
     linear-gradient(90deg, transparent 49.94%, #dceff20c 50%, transparent 50.06%);
-  background-position: 0 0, 41px 29px, center;
-  background-size: 42px 42px, 67px 67px, 100% 100%;
+  background-position:
+    0 0,
+    41px 29px,
+    center;
+  background-size:
+    42px 42px,
+    67px 67px,
+    100% 100%;
   mask-image: linear-gradient(to bottom, #000 0 80%, transparent 100%);
 }
 .login-ambient::after {
@@ -2646,7 +2667,9 @@ td strong {
   border: 1px solid #d9e9ea2b;
   border-radius: 13px;
   background: #080b0d8c;
-  box-shadow: inset 0 1px #ffffff0d, 0 8px 24px #00000033;
+  box-shadow:
+    inset 0 1px #ffffff0d,
+    0 8px 24px #00000033;
   backdrop-filter: blur(14px);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -2740,7 +2763,10 @@ td strong {
   padding: 11px 15px;
   font-size: 11px;
   font-weight: 600;
-  transition: transform 0.2s, background 0.2s, border-color 0.2s;
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    border-color 0.2s;
 }
 .login-cta-primary:hover,
 .login-cta-secondary:hover {
@@ -2770,7 +2796,9 @@ td strong {
   border: 1px solid #d7e8e839;
   border-radius: 16px;
   background: linear-gradient(135deg, #111718e8, #0a0e0fdb);
-  box-shadow: 0 25px 90px #0000007a, inset 0 1px #ffffff0b;
+  box-shadow:
+    0 25px 90px #0000007a,
+    inset 0 1px #ffffff0b;
   backdrop-filter: blur(20px);
 }
 .login-access-heading .secure-chip {
@@ -2922,8 +2950,7 @@ td strong {
   min-height: 100dvh;
   background:
     radial-gradient(ellipse at 91% 2%, #70b8cf2c, transparent 33%),
-    radial-gradient(ellipse at 45% 78%, #175e7b14, transparent 38%),
-    #060a0e;
+    radial-gradient(ellipse at 45% 78%, #175e7b14, transparent 38%), #060a0e;
 }
 .app-shell::before {
   content: "";
@@ -2935,7 +2962,9 @@ td strong {
   background-image:
     radial-gradient(#d4f8ff 0.55px, transparent 0.8px),
     linear-gradient(90deg, transparent 49.95%, #d5f7ff0a 50%, transparent 50.05%);
-  background-size: 55px 55px, 100% 100%;
+  background-size:
+    55px 55px,
+    100% 100%;
 }
 .workspace-main {
   position: relative;
@@ -3091,7 +3120,7 @@ td strong {
   padding: 8px;
   border: 1px solid #c3f3f23b;
   border-radius: 10px;
-  background: #0b131aeF;
+  background: #0b131aef;
   box-shadow: 0 18px 45px #00000078;
 }
 .user-menu-popover > div {
@@ -3139,7 +3168,9 @@ td strong {
   background:
     radial-gradient(circle at 84% 40%, #a2e9f11f, transparent 20%),
     linear-gradient(112deg, #0d1a23ee, #091015e8 60%, #0b1720e8);
-  box-shadow: inset 0 1px #efffff0d, 0 20px 60px #0000002e;
+  box-shadow:
+    inset 0 1px #efffff0d,
+    0 20px 60px #0000002e;
 }
 .dashboard-hero::before {
   content: "";
@@ -3242,7 +3273,9 @@ td strong {
   border: 1px solid #c9f8f380;
   border-radius: 22px;
   background: linear-gradient(135deg, #6fd4e14c, #183049aa);
-  box-shadow: 0 0 42px #9ceaf13d, inset 0 1px #ffffff24;
+  box-shadow:
+    0 0 42px #9ceaf13d,
+    inset 0 1px #ffffff24;
   color: #d6fcfe;
   transform: translate(-50%, -50%) rotate(12deg);
 }
@@ -3306,7 +3339,9 @@ td strong {
   background:
     radial-gradient(circle at 100% 0, #9fe8ee12, transparent 32%),
     linear-gradient(135deg, #0d171eea, #091016ed);
-  box-shadow: inset 0 1px #efffff08, 0 11px 28px #0000001c;
+  box-shadow:
+    inset 0 1px #efffff08,
+    0 11px 28px #0000001c;
 }
 .dashboard-page .system-card::after {
   content: "";
@@ -3317,11 +3352,16 @@ td strong {
   height: 95px;
   border: 1px solid #b9f1f11c;
   border-radius: 50%;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 .dashboard-page .system-card:hover {
   border-color: #bff5f178;
-  box-shadow: 0 18px 36px #0000003b, 0 0 30px #8edceb14, inset 0 1px #efffff0f;
+  box-shadow:
+    0 18px 36px #0000003b,
+    0 0 30px #8edceb14,
+    inset 0 1px #efffff0f;
 }
 .dashboard-page .system-card:hover::after {
   opacity: 0.9;

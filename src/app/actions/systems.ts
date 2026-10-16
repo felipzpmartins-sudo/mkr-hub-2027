@@ -61,11 +61,7 @@ export async function launchSystem(form: FormData) {
     where: { userId_systemId: { userId: user.id, systemId } },
   });
   if (access && (!access.enabled || access.status === "REVOKED")) redirect("/forbidden");
-  if (
-    system.status !== "ONLINE" ||
-    !system.url ||
-    !isSafeSystemUrl(system.url)
-  )
+  if (system.status !== "ONLINE" || !system.url || !isSafeSystemUrl(system.url))
     redirect("/systems?notice=unavailable");
   let activeAccess = access;
   let systemSession = sessionForSystem(system.slug, session?.user);
@@ -80,25 +76,30 @@ export async function launchSystem(form: FormData) {
 
   if (
     !systemSession &&
-    system.slug !== "maker-wallet" &&
-    (!activeAccess || system.slug === "central-de-videos")
+    (!activeAccess ||
+      system.slug === "central-de-videos" ||
+      (system.slug === "maker-wallet" && activeAccess.enabled && activeAccess.status === "ACTIVE"))
   ) {
-    const provisioned = await provisionSystemAccount(system.slug, user);
+    const requestedRole = activeAccess?.role === "ADMIN" ? "ADMIN" : "USER";
+    const provisioned =
+      system.slug === "maker-wallet"
+        ? await provisionSystemAccount(system.slug, user, requestedRole)
+        : await provisionSystemAccount(system.slug, user);
     if (provisioned) {
       const data = {
-          userId: user.id,
-          systemId: system.id,
-          enabled: true,
-          role: "USER",
-          externalUserId: provisioned.identity.subject,
-          externalUserEmail: provisioned.identity.email,
-          externalDisplayName: provisioned.identity.name,
-          externalProvider: system.slug,
-          externalIssuer: system.url,
-          externalSubject: provisioned.identity.subject,
-          encryptedExternalSecret: provisioned.encryptedSecret,
-          linkedAt: new Date(),
-        };
+        userId: user.id,
+        systemId: system.id,
+        enabled: true,
+        role: "USER",
+        externalUserId: provisioned.identity.subject,
+        externalUserEmail: provisioned.identity.email,
+        externalDisplayName: provisioned.identity.name,
+        externalProvider: system.slug,
+        externalIssuer: system.url,
+        externalSubject: provisioned.identity.subject,
+        encryptedExternalSecret: provisioned.encryptedSecret,
+        linkedAt: new Date(),
+      };
       activeAccess = activeAccess
         ? await db.userSystemAccess.update({ where: { id: activeAccess.id }, data })
         : await db.userSystemAccess.create({ data });
@@ -121,7 +122,10 @@ export async function launchSystem(form: FormData) {
     ? await createSystemSsoUrl(system.slug, user.id, system.url, systemSession)
     : null;
   const connected =
-    !!activeAccess && activeAccess.enabled && activeAccess.status === "ACTIVE" && !!activeAccess.externalSubject;
+    !!activeAccess &&
+    activeAccess.enabled &&
+    activeAccess.status === "ACTIVE" &&
+    !!activeAccess.externalSubject;
   if (!ssoUrl && connected) redirect("/systems?notice=sign-in");
   if (!ssoUrl) redirect("/systems?notice=provisioning");
 
@@ -138,11 +142,7 @@ export async function launchSystem(form: FormData) {
   redirect(destination);
 }
 
-/**
- * Maker Wallet is invitation-only. A request creates a disabled HUB access that
- * is visible to administrators in the permissions screen; it never creates an
- * external Wallet account on the person's behalf.
- */
+/** Creates a pending request. The external account is created only after approval. */
 export async function requestMakerWalletAccess() {
   await ensureHubSchema();
   const user = await requireUser();
@@ -152,23 +152,42 @@ export async function requestMakerWalletAccess() {
   const existing = await db.userSystemAccess.findUnique({
     where: { userId_systemId: { userId: user.id, systemId: system.id } },
   });
-  if (existing) redirect("/dashboard?notice=wallet-request-pending");
+  if (existing?.enabled && existing.status === "ACTIVE") redirect("/dashboard");
+  if (existing?.status === "ACTIVE") redirect("/dashboard?notice=wallet-request-pending");
 
   const ipAddress = await requestIp();
   await db.$transaction(async (tx) => {
-    const request = await tx.userSystemAccess.create({
-      data: {
-        userId: user.id,
-        systemId: system.id,
-        enabled: false,
-        role: "USER",
-        status: "ACTIVE",
-      },
-    });
+    const request = existing
+      ? await tx.userSystemAccess.update({
+          where: { id: existing.id },
+          data: {
+            enabled: false,
+            role: "USER",
+            status: "ACTIVE",
+            externalUserId: null,
+            externalUserEmail: null,
+            externalDisplayName: null,
+            externalProvider: null,
+            externalIssuer: null,
+            externalSubject: null,
+            encryptedExternalSecret: null,
+            linkedBy: null,
+            linkedAt: null,
+          },
+        })
+      : await tx.userSystemAccess.create({
+          data: {
+            userId: user.id,
+            systemId: system.id,
+            enabled: false,
+            role: "USER",
+            status: "ACTIVE",
+          },
+        });
     await tx.auditLog.create({
       data: {
         userId: user.id,
-        action: "USER_SYSTEM_ACCESS_CREATED",
+        action: existing ? "USER_SYSTEM_ACCESS_UPDATED" : "USER_SYSTEM_ACCESS_CREATED",
         target: request.id,
         ipAddress,
         metadata: { systemSlug: system.slug, source: "user-access-request", pendingApproval: true },
@@ -177,6 +196,7 @@ export async function requestMakerWalletAccess() {
   });
   revalidatePath("/dashboard");
   revalidatePath("/systems");
+  revalidatePath("/admin/accounts");
   revalidatePath("/admin/permissions");
   redirect("/dashboard?notice=wallet-requested");
 }

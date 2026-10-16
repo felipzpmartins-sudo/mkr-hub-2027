@@ -64,10 +64,11 @@ type PurchaseApiConfig = {
 type MakerWalletConfig = {
   apiUrl: string;
   origin: string;
+  hubProvisionKey: string;
   encryptionKey: Buffer;
 };
 
-type CentralVideoConfig = MakerWalletConfig;
+type CentralVideoConfig = Omit<MakerWalletConfig, "hubProvisionKey">;
 
 export type CentralPurchasesDirectoryUser = {
   id: string;
@@ -133,14 +134,18 @@ function getMarketingAdminConfig(): PurchaseApiConfig | null {
 }
 
 function getMakerWalletConfig(): MakerWalletConfig | null {
-  return getApiIntegrationConfig("MAKER_WALLET");
+  const baseConfig = getApiIntegrationConfig("MAKER_WALLET");
+  const hubProvisionKey = configuredValue("MAKER_WALLET_HUB_PROVISION_KEY");
+  return baseConfig && hubProvisionKey ? { ...baseConfig, hubProvisionKey } : null;
 }
 
 function getCentralVideoConfig(): CentralVideoConfig | null {
   return getApiIntegrationConfig("CENTRAL_VIDEO");
 }
 
-function getApiIntegrationConfig(prefix: "MAKER_WALLET" | "CENTRAL_VIDEO"): MakerWalletConfig | null {
+function getApiIntegrationConfig(
+  prefix: "MAKER_WALLET" | "CENTRAL_VIDEO",
+): CentralVideoConfig | null {
   const apiUrl = configuredValue(`${prefix}_API_URL`);
   const origin = configuredValue(`${prefix}_ORIGIN`);
   const encryptionSecret = configuredValue("HUB_SSO_ENCRYPTION_KEY");
@@ -156,7 +161,9 @@ function getApiIntegrationConfig(prefix: "MAKER_WALLET" | "CENTRAL_VIDEO"): Make
   }
 }
 
-function getIntegrationConfig(prefix: "CENTRAL_PURCHASES" | "CENTRAL_MARKETING"): CentralConfig | null {
+function getIntegrationConfig(
+  prefix: "CENTRAL_PURCHASES" | "CENTRAL_MARKETING",
+): CentralConfig | null {
   const supabaseUrl = configuredValue(`${prefix}_SUPABASE_URL`);
   const publishableKey = configuredValue(`${prefix}_SUPABASE_ANON_KEY`);
   const origin = configuredValue(`${prefix}_ORIGIN`);
@@ -193,11 +200,12 @@ function readIdentity(value: unknown, fallbackEmail: string): CentralIdentity | 
     rawUser.user_metadata && typeof rawUser.user_metadata === "object"
       ? (rawUser.user_metadata as Record<string, unknown>)
       : {};
-  const metadataName = typeof metadata.full_name === "string"
-    ? metadata.full_name.trim()
-    : typeof metadata.name === "string"
-      ? metadata.name.trim()
-      : "";
+  const metadataName =
+    typeof metadata.full_name === "string"
+      ? metadata.full_name.trim()
+      : typeof metadata.name === "string"
+        ? metadata.name.trim()
+        : "";
   const name = (metadataName || responseEmail || fallbackEmail).slice(0, 100);
 
   return { subject, email: responseEmail, name, accessToken, refreshToken };
@@ -214,7 +222,9 @@ export async function listCentralPurchasesUsers(): Promise<CentralPurchasesDirec
   });
 
   if (!response.ok) {
-    throw new Error(`Não foi possível consultar os usuários do Central de Compras (${response.status}).`);
+    throw new Error(
+      `Não foi possível consultar os usuários do Central de Compras (${response.status}).`,
+    );
   }
 
   const payload = (await response.json()) as { users?: unknown };
@@ -226,15 +236,22 @@ export async function listCentralPurchasesUsers(): Promise<CentralPurchasesDirec
     const id = typeof user.id === "string" ? user.id : "";
     const email = typeof user.email === "string" ? user.email : "";
     if (!id || !email) return [];
-    return [{
-      id,
-      email,
-      name: typeof user.full_name === "string" && user.full_name.trim() ? user.full_name.trim() : email,
-      createdAt: typeof user.created_at === "string" ? user.created_at : null,
-      lastSignInAt: typeof user.last_sign_in_at === "string" ? user.last_sign_in_at : null,
-      roles: Array.isArray(user.roles) ? user.roles.filter((role): role is string => typeof role === "string") : [],
-      active: user.active !== false,
-    }];
+    return [
+      {
+        id,
+        email,
+        name:
+          typeof user.full_name === "string" && user.full_name.trim()
+            ? user.full_name.trim()
+            : email,
+        createdAt: typeof user.created_at === "string" ? user.created_at : null,
+        lastSignInAt: typeof user.last_sign_in_at === "string" ? user.last_sign_in_at : null,
+        roles: Array.isArray(user.roles)
+          ? user.roles.filter((role): role is string => typeof role === "string")
+          : [],
+        active: user.active !== false,
+      },
+    ];
   });
 }
 
@@ -242,9 +259,10 @@ export async function manageCentralPurchasesUser(input: CentralPurchasesUserActi
   const config = getCentralConfig();
   if (!config) throw new Error("Central de Compras não está configurado no MKR HUB.");
 
-  const body = input.action === "reset_password"
-    ? { action: input.action, user_id: input.userId, new_password: input.password }
-    : { action: input.action, user_id: input.userId, active: input.active };
+  const body =
+    input.action === "reset_password"
+      ? { action: input.action, user_id: input.userId, new_password: input.password }
+      : { action: input.action, user_id: input.userId, active: input.active };
   const response = await fetch(`${config.apiUrl}/api/admin/users/manage`, {
     method: "POST",
     headers: {
@@ -258,9 +276,13 @@ export async function manageCentralPurchasesUser(input: CentralPurchasesUserActi
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-    if (payload?.error === "user_not_found") throw new Error("Usuário não encontrado no Central de Compras.");
-    if (payload?.error === "invalid_password") throw new Error("A nova senha não atende aos requisitos de segurança.");
-    throw new Error(`Não foi possível atualizar o usuário do Central de Compras (${response.status}).`);
+    if (payload?.error === "user_not_found")
+      throw new Error("Usuário não encontrado no Central de Compras.");
+    if (payload?.error === "invalid_password")
+      throw new Error("A nova senha não atende aos requisitos de segurança.");
+    throw new Error(
+      `Não foi possível atualizar o usuário do Central de Compras (${response.status}).`,
+    );
   }
 }
 
@@ -274,7 +296,9 @@ export async function listCentralMarketingUsers(): Promise<CentralMarketingDirec
     signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) {
-    throw new Error(`Não foi possível consultar os usuários do Central de Marketing (${response.status}).`);
+    throw new Error(
+      `Não foi possível consultar os usuários do Central de Marketing (${response.status}).`,
+    );
   }
   const payload = (await response.json()) as { users?: unknown };
   if (!Array.isArray(payload.users)) throw new Error("Resposta inválida do Central de Marketing.");
@@ -285,25 +309,35 @@ export async function listCentralMarketingUsers(): Promise<CentralMarketingDirec
     const id = typeof user.id === "string" ? user.id : "";
     const email = typeof user.email === "string" ? user.email : "";
     if (!id || !email) return [];
-    const rawName = typeof user.name === "string" ? user.name : typeof user.full_name === "string" ? user.full_name : "";
-    return [{
-      id,
-      email,
-      name: rawName.trim() || email,
-      createdAt: typeof user.created_at === "string" ? user.created_at : null,
-      lastSignInAt: typeof user.last_sign_in_at === "string" ? user.last_sign_in_at : null,
-      roles: Array.isArray(user.roles) ? user.roles.filter((role): role is string => typeof role === "string") : [],
-      active: user.active !== false,
-    }];
+    const rawName =
+      typeof user.name === "string"
+        ? user.name
+        : typeof user.full_name === "string"
+          ? user.full_name
+          : "";
+    return [
+      {
+        id,
+        email,
+        name: rawName.trim() || email,
+        createdAt: typeof user.created_at === "string" ? user.created_at : null,
+        lastSignInAt: typeof user.last_sign_in_at === "string" ? user.last_sign_in_at : null,
+        roles: Array.isArray(user.roles)
+          ? user.roles.filter((role): role is string => typeof role === "string")
+          : [],
+        active: user.active !== false,
+      },
+    ];
   });
 }
 
 export async function manageCentralMarketingUser(input: CentralMarketingUserAction) {
   const config = getMarketingAdminConfig();
   if (!config) throw new Error("Central de Marketing não está configurado no MKR HUB.");
-  const body = input.action === "reset_password"
-    ? { action: input.action, user_id: input.userId, new_password: input.password }
-    : { action: input.action, user_id: input.userId, active: input.active };
+  const body =
+    input.action === "reset_password"
+      ? { action: input.action, user_id: input.userId, new_password: input.password }
+      : { action: input.action, user_id: input.userId, active: input.active };
   const response = await fetch(`${config.apiUrl}/api/admin/users/manage`, {
     method: "POST",
     headers: {
@@ -316,9 +350,13 @@ export async function manageCentralMarketingUser(input: CentralMarketingUserActi
   });
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-    if (payload?.error === "user_not_found") throw new Error("Usuário não encontrado no Central de Marketing.");
-    if (payload?.error === "invalid_password") throw new Error("A nova senha não atende aos requisitos de segurança.");
-    throw new Error(`Não foi possível atualizar o usuário do Central de Marketing (${response.status}).`);
+    if (payload?.error === "user_not_found")
+      throw new Error("Usuário não encontrado no Central de Marketing.");
+    if (payload?.error === "invalid_password")
+      throw new Error("A nova senha não atende aos requisitos de segurança.");
+    throw new Error(
+      `Não foi possível atualizar o usuário do Central de Marketing (${response.status}).`,
+    );
   }
 }
 
@@ -392,6 +430,36 @@ async function signInWithConfig(
   }
 }
 
+function readMakerWalletIdentity(
+  payload: unknown,
+  fallbackEmail: string,
+): MakerWalletIdentity | null {
+  if (!payload || typeof payload !== "object") return null;
+  const data = (payload as { data?: unknown }).data;
+  if (!data || typeof data !== "object") return null;
+  const loginData = data as { token?: unknown; user?: unknown };
+  const accessToken = loginData.token;
+  if (
+    typeof accessToken !== "string" ||
+    !accessToken ||
+    !loginData.user ||
+    typeof loginData.user !== "object"
+  ) {
+    return null;
+  }
+  const user = loginData.user as Record<string, unknown>;
+  const subject = typeof user.id === "string" ? user.id.trim() : "";
+  const responseEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+  const name = typeof user.name === "string" ? user.name.trim().slice(0, 100) : "";
+  if (!subject || !responseEmail) return null;
+  return {
+    accessToken,
+    subject,
+    email: responseEmail,
+    name: name || responseEmail || fallbackEmail,
+  };
+}
+
 export async function signInToMakerWallet(
   email: string,
   password: string,
@@ -406,21 +474,7 @@ export async function signInToMakerWallet(
       cache: "no-store",
     });
     if (!response.ok) return null;
-    const payload: unknown = await response.json();
-    if (!payload || typeof payload !== "object") return null;
-    const data = (payload as { data?: unknown }).data;
-    if (!data || typeof data !== "object") return null;
-    const loginData = data as { token?: unknown; user?: unknown };
-    const accessToken = loginData.token;
-    if (typeof accessToken !== "string" || !accessToken || !loginData.user || typeof loginData.user !== "object") {
-      return null;
-    }
-    const user = loginData.user as Record<string, unknown>;
-    const subject = typeof user.id === "string" ? user.id.trim() : "";
-    const responseEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
-    const name = typeof user.name === "string" ? user.name.trim().slice(0, 100) : "";
-    if (!subject || !responseEmail) return null;
-    return { accessToken, subject, email: responseEmail, name: name || responseEmail || email };
+    return readMakerWalletIdentity(await response.json(), email);
   } catch {
     return null;
   }
@@ -443,13 +497,24 @@ export async function signInToCentralVideo(
     const payload: unknown = await response.json();
     if (!payload || typeof payload !== "object") return null;
     const data = payload as { token?: unknown; user?: unknown };
-    if (typeof data.token !== "string" || !data.token || !data.user || typeof data.user !== "object") return null;
+    if (
+      typeof data.token !== "string" ||
+      !data.token ||
+      !data.user ||
+      typeof data.user !== "object"
+    )
+      return null;
     const user = data.user as Record<string, unknown>;
     const subject = typeof user.id === "string" ? user.id.trim() : "";
     const responseEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
     const name = typeof user.name === "string" ? user.name.trim().slice(0, 100) : "";
     if (!subject || !responseEmail) return null;
-    return { accessToken: data.token, subject, email: responseEmail, name: name || responseEmail || email };
+    return {
+      accessToken: data.token,
+      subject,
+      email: responseEmail,
+      name: name || responseEmail || email,
+    };
   } catch {
     return null;
   }
@@ -462,6 +527,7 @@ export async function signInToCentralVideo(
 export async function provisionSystemAccount(
   slug: string,
   account: HubAccount,
+  requestedRole: "ADMIN" | "USER" = "USER",
 ): Promise<ProvisionedSystemSession | null> {
   const secret = randomBytes(32).toString("base64url");
   let identity: (CentralIdentity | MakerWalletIdentity | CentralVideoIdentity) | null = null;
@@ -473,17 +539,19 @@ export async function provisionSystemAccount(
         : await signInToCentralMarketing(account.email, secret);
   } else if (slug === WALLET_SYSTEM_SLUG) {
     const config = getMakerWalletConfig();
-    const invite = configuredValue("MAKER_WALLET_REGISTRATION_INVITE_CODE");
-    if (!config || !invite) return null;
+    if (!config) return null;
     try {
-      const response = await fetch(`${config.apiUrl}/auth/register`, {
+      const response = await fetch(`${config.apiUrl}/auth/hub-provision`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: account.name, email: account.email, password: secret, invite }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-hub-provision-key": config.hubProvisionKey,
+        },
+        body: JSON.stringify({ name: account.name, email: account.email, role: requestedRole }),
         cache: "no-store",
       });
       if (!response.ok) return null;
-      identity = await signInToMakerWallet(account.email, secret);
+      identity = readMakerWalletIdentity(await response.json(), account.email);
     } catch {
       return null;
     }
@@ -509,11 +577,13 @@ export async function provisionSystemAccount(
   }
 
   if (!identity) return null;
-  const refreshToken = "refreshToken" in identity && typeof identity.refreshToken === "string"
-    ? identity.refreshToken
-    : undefined;
-  const encryptedSecret = slug === VIDEO_SYSTEM_SLUG ? null : encryptExternalSecret(secret);
-  if (slug !== VIDEO_SYSTEM_SLUG && !encryptedSecret) return null;
+  const refreshToken =
+    "refreshToken" in identity && typeof identity.refreshToken === "string"
+      ? identity.refreshToken
+      : undefined;
+  const doesNotNeedStoredSecret = slug === VIDEO_SYSTEM_SLUG || slug === WALLET_SYSTEM_SLUG;
+  const encryptedSecret = doesNotNeedStoredSecret ? null : encryptExternalSecret(secret);
+  if (!doesNotNeedStoredSecret && !encryptedSecret) return null;
   return {
     identity: { subject: identity.subject, email: identity.email, name: identity.name },
     session: refreshToken
@@ -523,10 +593,18 @@ export async function provisionSystemAccount(
   };
 }
 
-function readCentralVideoIdentity(value: unknown, fallbackEmail: string): CentralVideoIdentity | null {
+function readCentralVideoIdentity(
+  value: unknown,
+  fallbackEmail: string,
+): CentralVideoIdentity | null {
   if (!value || typeof value !== "object") return null;
   const payload = value as { token?: unknown; user?: unknown };
-  if (typeof payload.token !== "string" || !payload.token || !payload.user || typeof payload.user !== "object")
+  if (
+    typeof payload.token !== "string" ||
+    !payload.token ||
+    !payload.user ||
+    typeof payload.user !== "object"
+  )
     return null;
   const user = payload.user as Record<string, unknown>;
   const subject = typeof user.id === "string" ? user.id.trim() : "";
@@ -554,9 +632,10 @@ export async function signInWithStoredSystemSecret(
             ? await signInToCentralVideo(email, secret)
             : null;
   if (!identity) return null;
-  const refreshToken = "refreshToken" in identity && typeof identity.refreshToken === "string"
-    ? identity.refreshToken
-    : undefined;
+  const refreshToken =
+    "refreshToken" in identity && typeof identity.refreshToken === "string"
+      ? identity.refreshToken
+      : undefined;
   return {
     identity: { subject: identity.subject, email: identity.email, name: identity.name },
     session: refreshToken
@@ -619,7 +698,8 @@ export async function provisionMakerWalletUser(identity: MakerWalletIdentity) {
     const existingAccess = await tx.userSystemAccess.findUnique({
       where: { userId_systemId: { userId: user.id, systemId: system.id } },
     });
-    if (existingAccess && (!existingAccess.enabled || existingAccess.status === "REVOKED")) return null;
+    if (existingAccess && (!existingAccess.enabled || existingAccess.status === "REVOKED"))
+      return null;
 
     if (existingAccess) {
       await tx.userSystemAccess.update({
@@ -678,14 +758,20 @@ export async function provisionCentralVideoUser(identity: CentralVideoIdentity) 
         },
       });
       await tx.auditLog.create({
-        data: { userId: user.id, action: "USER_CREATED", target: user.id, metadata: { source: VIDEO_SYSTEM_SLUG } },
+        data: {
+          userId: user.id,
+          action: "USER_CREATED",
+          target: user.id,
+          metadata: { source: VIDEO_SYSTEM_SLUG },
+        },
       });
     }
 
     const existingAccess = await tx.userSystemAccess.findUnique({
       where: { userId_systemId: { userId: user.id, systemId: system.id } },
     });
-    if (existingAccess && (!existingAccess.enabled || existingAccess.status === "REVOKED")) return null;
+    if (existingAccess && (!existingAccess.enabled || existingAccess.status === "REVOKED"))
+      return null;
     if (existingAccess) {
       await tx.userSystemAccess.update({
         where: { id: existingAccess.id },
@@ -743,14 +829,20 @@ export async function provisionCentralMarketingUser(identity: CentralIdentity) {
         },
       });
       await tx.auditLog.create({
-        data: { userId: user.id, action: "USER_CREATED", target: user.id, metadata: { source: MARKETING_SYSTEM_SLUG } },
+        data: {
+          userId: user.id,
+          action: "USER_CREATED",
+          target: user.id,
+          metadata: { source: MARKETING_SYSTEM_SLUG },
+        },
       });
     }
 
     const existingAccess = await tx.userSystemAccess.findUnique({
       where: { userId_systemId: { userId: user.id, systemId: system.id } },
     });
-    if (existingAccess && (!existingAccess.enabled || existingAccess.status === "REVOKED")) return null;
+    if (existingAccess && (!existingAccess.enabled || existingAccess.status === "REVOKED"))
+      return null;
     const data = {
       externalUserId: identity.subject,
       externalUserEmail: identity.email,
@@ -763,7 +855,14 @@ export async function provisionCentralMarketingUser(identity: CentralIdentity) {
       await tx.userSystemAccess.update({ where: { id: existingAccess.id }, data });
     } else {
       const access = await tx.userSystemAccess.create({
-        data: { userId: user.id, systemId: system.id, enabled: true, role: "USER", linkedAt: new Date(), ...data },
+        data: {
+          userId: user.id,
+          systemId: system.id,
+          enabled: true,
+          role: "USER",
+          linkedAt: new Date(),
+          ...data,
+        },
       });
       await tx.auditLog.create({
         data: {
@@ -807,7 +906,8 @@ export async function provisionCentralPurchasesUser(identity: CentralIdentity) {
     const existingAccess = await tx.userSystemAccess.findUnique({
       where: { userId_systemId: { userId: user.id, systemId: system.id } },
     });
-    if (existingAccess && (!existingAccess.enabled || existingAccess.status === "REVOKED")) return null;
+    if (existingAccess && (!existingAccess.enabled || existingAccess.status === "REVOKED"))
+      return null;
 
     if (existingAccess) {
       await tx.userSystemAccess.update({

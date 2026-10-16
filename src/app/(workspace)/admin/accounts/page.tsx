@@ -5,10 +5,16 @@ import { db } from "@/lib/db";
 import { EmptyState, PageHeading } from "@/components/ui";
 import { canViewAccountDirectory } from "@/lib/account-directory";
 import { redirect } from "next/navigation";
+import { MakerWalletApprovalActions } from "@/components/maker-wallet-approval-actions";
 
 export const metadata = { title: "Contas por sistema" };
 
-function accountStatus(access: { enabled: boolean; externalSubject: string | null }) {
+function accountStatus(access: {
+  enabled: boolean;
+  externalSubject: string | null;
+  status: "ACTIVE" | "REVOKED";
+}) {
+  if (access.status === "REVOKED") return "Solicitação recusada";
   if (!access.enabled) return "Solicitação pendente";
   if (!access.externalSubject) return "Aguardando vínculo";
   return "Acesso liberado";
@@ -27,6 +33,10 @@ export default async function AccountsPage() {
     },
   });
   const accountCount = systems.reduce((total, system) => total + system.accesses.length, 0);
+  const walletRequests =
+    systems
+      .find((system) => system.slug === "maker-wallet")
+      ?.accesses.filter((access) => !access.enabled && access.status === "ACTIVE") ?? [];
 
   return (
     <>
@@ -35,6 +45,58 @@ export default async function AccountsPage() {
         title="Contas por sistema"
         description={`${accountCount} conta${accountCount === 1 ? "" : "s"} registrada${accountCount === 1 ? "" : "s"} ou vinculada${accountCount === 1 ? "" : "s"} no MKR HUB.`}
       />
+      <section className="panel table-panel wallet-requests-panel">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">MAKER WALLET</p>
+            <h2>Solicitações de acesso</h2>
+            <p className="muted">
+              Ao autorizar, a conta é criada automaticamente com o mesmo e-mail do MKR HUB.
+            </p>
+          </div>
+          <span className="count-pill">
+            {walletRequests.length} pendente{walletRequests.length === 1 ? "" : "s"}
+          </span>
+        </div>
+        {walletRequests.length ? (
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pessoa</th>
+                  <th>E-mail</th>
+                  <th>Solicitado em</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {walletRequests.map((access) => (
+                  <tr key={access.id}>
+                    <td>
+                      <strong>{access.user.name}</strong>
+                    </td>
+                    <td>{access.user.email}</td>
+                    <td>
+                      {new Intl.DateTimeFormat("pt-BR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(access.createdAt)}
+                    </td>
+                    <td>
+                      <MakerWalletApprovalActions accessId={access.id} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            title="Nenhuma solicitação pendente"
+            description="Novos pedidos do Maker Wallet aparecerão aqui para sua decisão."
+          />
+        )}
+      </section>
       <div className="stack-list">
         {systems.map((system) => (
           <section className="panel table-panel" key={system.id}>
@@ -43,7 +105,9 @@ export default async function AccountsPage() {
                 <p className="eyebrow">{system.status}</p>
                 <h2>{system.name}</h2>
               </div>
-              <span className="count-pill">{system.accesses.length} conta{system.accesses.length === 1 ? "" : "s"}</span>
+              <span className="count-pill">
+                {system.accesses.length} conta{system.accesses.length === 1 ? "" : "s"}
+              </span>
             </div>
             {system.accesses.length ? (
               <div className="table-scroll">
@@ -54,7 +118,9 @@ export default async function AccountsPage() {
                       <th>E-mail no MKR HUB</th>
                       <th>Conta no sistema</th>
                       <th>Situação</th>
-                      <th><span className="sr-only">Gerenciar</span></th>
+                      <th>
+                        <span className="sr-only">Gerenciar</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -67,7 +133,11 @@ export default async function AccountsPage() {
                         <td>{access.user.email}</td>
                         <td>{access.externalUserEmail || access.user.email}</td>
                         <td>
-                          <span className={access.enabled && access.externalSubject ? "permission-tag" : "muted"}>
+                          <span
+                            className={
+                              access.enabled && access.externalSubject ? "permission-tag" : "muted"
+                            }
+                          >
                             {accountStatus(access)}
                           </span>
                         </td>
@@ -86,12 +156,18 @@ export default async function AccountsPage() {
                 </table>
               </div>
             ) : (
-              <EmptyState title="Nenhuma conta vinculada" description="As contas autorizadas neste sistema aparecerão aqui." />
+              <EmptyState
+                title="Nenhuma conta vinculada"
+                description="As contas autorizadas neste sistema aparecerão aqui."
+              />
             )}
           </section>
         ))}
       </div>
-      <p className="page-note">A lista mostra as contas e solicitações registradas no MKR HUB. Contas antigas de um sistema só aparecem após serem vinculadas ao HUB.</p>
+      <p className="page-note">
+        A lista mostra as contas e solicitações registradas no MKR HUB. Contas antigas de um sistema
+        só aparecem após serem vinculadas ao HUB.
+      </p>
     </>
   );
 }

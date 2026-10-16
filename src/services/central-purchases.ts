@@ -30,6 +30,7 @@ type MakerWalletIdentity = MakerWalletSession & {
   subject: string;
   email: string;
   name: string;
+  role: "ADMIN" | "USER" | "RESTRICTED";
 };
 
 type CentralVideoIdentity = CentralVideoSession & {
@@ -451,13 +452,37 @@ function readMakerWalletIdentity(
   const subject = typeof user.id === "string" ? user.id.trim() : "";
   const responseEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
   const name = typeof user.name === "string" ? user.name.trim().slice(0, 100) : "";
+  const role = user.role === "ADMIN" || user.role === "RESTRICTED" ? user.role : "USER";
   if (!subject || !responseEmail) return null;
   return {
     accessToken,
     subject,
     email: responseEmail,
     name: name || responseEmail || fallbackEmail,
+    role,
   };
+}
+
+export async function findExistingMakerWalletAccount(
+  email: string,
+): Promise<MakerWalletIdentity | null> {
+  const config = getMakerWalletConfig();
+  if (!config) return null;
+  try {
+    const response = await fetch(`${config.apiUrl}/auth/hub-existing-account`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-hub-provision-key": config.hubProvisionKey,
+      },
+      body: JSON.stringify({ email }),
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return readMakerWalletIdentity(await response.json(), email);
+  } catch {
+    return null;
+  }
 }
 
 export async function signInToMakerWallet(

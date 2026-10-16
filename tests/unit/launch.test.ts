@@ -11,6 +11,9 @@ const mocks = vi.hoisted(() => ({
   createSsoUrl: vi.fn(),
   provision: vi.fn(),
   restore: vi.fn(),
+  findWallet: vi.fn(),
+  transaction: vi.fn(),
+  accessUpsert: vi.fn(),
 }));
 
 vi.mock("@/services/authorization", () => ({
@@ -27,6 +30,7 @@ vi.mock("@/lib/db", () => ({
       update: mocks.accessUpdate,
     },
     auditLog: { create: mocks.audit },
+    $transaction: mocks.transaction,
   },
 }));
 vi.mock("@/auth", () => ({ auth: mocks.auth }));
@@ -37,6 +41,7 @@ vi.mock("@/services/central-purchases", () => ({
   createCentralVideoSsoUrl: mocks.createSsoUrl,
   provisionSystemAccount: mocks.provision,
   signInWithStoredSystemSecret: mocks.restore,
+  findExistingMakerWalletAccount: mocks.findWallet,
 }));
 vi.mock("@/lib/request", () => ({ requestIp: async () => null }));
 vi.mock("next/navigation", () => ({
@@ -46,7 +51,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { launchSystem } from "@/app/actions/systems";
+import { launchSystem, requestMakerWalletAccess } from "@/app/actions/systems";
 
 describe("system catalog launch", () => {
   const form = new FormData();
@@ -89,6 +94,18 @@ describe("system catalog launch", () => {
       encryptedSecret: "encrypted-secret",
     });
     mocks.createSsoUrl.mockResolvedValue("https://video.example.com/sso?ticket=opaque");
+    mocks.findWallet.mockResolvedValue(null);
+    mocks.accessUpsert.mockResolvedValue({ id: "wallet-access" });
+    mocks.transaction.mockImplementation(async (callback) =>
+      callback({
+        userSystemAccess: {
+          upsert: mocks.accessUpsert,
+          create: mocks.accessCreate,
+          update: mocks.accessUpdate,
+        },
+        auditLog: { create: mocks.audit },
+      }),
+    );
   });
 
   it("does not launch a system id that is not in the catalog", async () => {
@@ -196,6 +213,40 @@ describe("system catalog launch", () => {
       "maker-wallet",
       { id: "authenticated-user", name: "Pessoa Teste", email: "pessoa@example.com" },
       "ADMIN",
+    );
+  });
+
+  it("links an existing Maker Wallet account instead of leaving an approval pending", async () => {
+    mocks.system.mockResolvedValue({
+      ...onlineSystem,
+      slug: "maker-wallet",
+      url: "https://wallet.example.com",
+    });
+    mocks.access.mockResolvedValue({
+      id: "pending-wallet-access",
+      enabled: false,
+      status: "ACTIVE",
+      externalSubject: null,
+      role: "USER",
+    });
+    mocks.findWallet.mockResolvedValue({
+      subject: "existing-wallet-user",
+      email: "pessoa@example.com",
+      name: "Pessoa Teste",
+      role: "USER",
+      accessToken: "wallet-token",
+    });
+
+    await expect(requestMakerWalletAccess()).rejects.toThrow(
+      "REDIRECT:/dashboard?notice=wallet-linked",
+    );
+    expect(mocks.accessUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({
+          enabled: true,
+          externalSubject: "existing-wallet-user",
+        }),
+      }),
     );
   });
 });

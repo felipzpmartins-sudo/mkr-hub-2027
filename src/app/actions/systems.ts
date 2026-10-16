@@ -9,6 +9,7 @@ import {
   createCentralPurchasesSsoUrl,
   createMakerWalletSsoUrl,
   createCentralVideoSsoUrl,
+  findExistingMakerWalletAccount,
   provisionSystemAccount,
   signInWithStoredSystemSecret,
 } from "@/services/central-purchases";
@@ -153,6 +154,65 @@ export async function requestMakerWalletAccess() {
     where: { userId_systemId: { userId: user.id, systemId: system.id } },
   });
   if (existing?.enabled && existing.status === "ACTIVE") redirect("/dashboard");
+
+  const existingWalletAccount =
+    existing?.status === "REVOKED" ? null : await findExistingMakerWalletAccount(user.email);
+  if (existingWalletAccount) {
+    const role = existingWalletAccount.role === "ADMIN" ? "ADMIN" : "USER";
+    const ipAddress = await requestIp();
+    await db.$transaction(async (tx) => {
+      const access = await tx.userSystemAccess.upsert({
+        where: { userId_systemId: { userId: user.id, systemId: system.id } },
+        create: {
+          userId: user.id,
+          systemId: system.id,
+          enabled: true,
+          role,
+          status: "ACTIVE",
+          externalUserId: existingWalletAccount.subject,
+          externalUserEmail: existingWalletAccount.email,
+          externalDisplayName: existingWalletAccount.name,
+          externalProvider: "maker-wallet",
+          externalIssuer: system.url,
+          externalSubject: existingWalletAccount.subject,
+          linkedBy: user.id,
+          linkedAt: new Date(),
+        },
+        update: {
+          enabled: true,
+          role,
+          status: "ACTIVE",
+          externalUserId: existingWalletAccount.subject,
+          externalUserEmail: existingWalletAccount.email,
+          externalDisplayName: existingWalletAccount.name,
+          externalProvider: "maker-wallet",
+          externalIssuer: system.url,
+          externalSubject: existingWalletAccount.subject,
+          encryptedExternalSecret: null,
+          linkedBy: user.id,
+          linkedAt: new Date(),
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: existing ? "USER_SYSTEM_ACCESS_UPDATED" : "USER_SYSTEM_ACCESS_CREATED",
+          target: access.id,
+          ipAddress,
+          metadata: {
+            systemSlug: system.slug,
+            source: "existing-wallet-account-link",
+            role,
+          },
+        },
+      });
+    });
+    revalidatePath("/dashboard");
+    revalidatePath("/systems");
+    revalidatePath("/admin/accounts");
+    redirect("/dashboard?notice=wallet-linked");
+  }
+
   if (existing?.status === "ACTIVE") redirect("/dashboard?notice=wallet-request-pending");
 
   const ipAddress = await requestIp();
